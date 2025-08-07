@@ -48,16 +48,17 @@ function BookDetailsSkeleton() {
 export default function BookDetailsPage({ params }: { params: { id: string } }) {
   const [book, setBook] = useState<Book | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { id } = params;
 
   useEffect(() => {
     const fetchBook = async () => {
         setIsLoading(true);
-        const bookData = await getBookById(params.id);
+        const bookData = await getBookById(id);
         setBook(bookData);
         setIsLoading(false);
     }
     fetchBook();
-  }, [params.id]);
+  }, [id]);
 
 
   if (isLoading) {
