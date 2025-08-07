@@ -11,6 +11,7 @@ const navLinks = [
   { href: '/catalog', label: 'Katalog', icon: Compass },
   { href: '/post-book', label: 'Qo\'shish', icon: PlusCircle, protected: true },
   { href: '/my-posts', label: 'E\'lonlarim', icon: BookUser, protected: true },
+  { href: '/profile', label: 'Profil', icon: User, protected: true },
   { href: '/login', label: 'Kirish', icon: User, publicOnly: true },
 ];
 
@@ -20,15 +21,20 @@ export default function MobileNav() {
 
   const getVisibleLinks = () => {
     if (isAuthenticated) {
+      // For logged-in users, show Home, Catalog, Add, My Posts, Profile
       return navLinks.filter(link => !link.publicOnly);
     }
+    // For logged-out users, show Home, Catalog, Login
     return navLinks.filter(link => !link.protected);
   }
+  
+  const visibleLinks = getVisibleLinks();
+  const gridColsClass = `grid-cols-${visibleLinks.length}`;
 
   return (
     <div className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-background border-t z-50">
-      <nav className="grid h-full grid-cols-4">
-        {getVisibleLinks().map((link) => {
+      <nav className={cn("grid h-full", gridColsClass)}>
+        {visibleLinks.map((link) => {
           const isActive = pathname === link.href;
           return (
             <Link
