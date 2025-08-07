@@ -119,14 +119,14 @@ export const deleteBook = async (id: string, userId: string): Promise<{ success:
 };
 
 export const getCategories = async (): Promise<string[]> => {
-    await delay(100);
+    await delay(API_DELAY);
     const querySnapshot = await getDocs(booksCollection);
     const categories = new Set(querySnapshot.docs.map(doc => doc.data().category as string));
     return Array.from(categories);
 }
 
 export const getCities = async (): Promise<string[]> => {
-    await delay(100);
+    await delay(API_DELAY);
     const querySnapshot = await getDocs(booksCollection);
     const cities = new Set(querySnapshot.docs.map(doc => doc.data().city as string));
     return Array.from(cities);
