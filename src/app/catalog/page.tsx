@@ -98,19 +98,20 @@ export default function CatalogPage() {
       <aside className="w-full md:w-1/4 lg:w-1/5">
         <div className="sticky top-20 space-y-6">
           <Collapsible open={isFilterOpen} onOpenChange={setIsFilterOpen}>
-             <CollapsibleTrigger className="w-full">
-                <div className="flex justify-between items-center p-4 border rounded-lg bg-card md:p-0 md:border-none md:bg-transparent">
-                    <h3 className="text-xl font-bold flex items-center gap-2"><FilterIcon className="h-5 w-5 md:hidden" /> Filtrlar</h3>
-                    <div className="flex items-center gap-2">
+             <div className="flex justify-between items-center p-4 border rounded-lg bg-card md:p-0 md:border-none md:bg-transparent">
+                <CollapsibleTrigger className="w-full text-left">
+                    <h3 className="text-xl font-bold flex items-center gap-2">
+                        <FilterIcon className="h-5 w-5 md:hidden" />
+                        Filtrlar
                         {activeFiltersCount > 0 && (
                             <Badge variant="secondary" className="md:hidden">{activeFiltersCount}</Badge>
                         )}
-                        <Button variant="ghost" size="icon" className="md:hidden">
-                            <ChevronDown className={`h-5 w-5 transition-transform ${isFilterOpen ? 'rotate-180' : ''}`} />
-                        </Button>
-                    </div>
-                </div>
-             </CollapsibleTrigger>
+                    </h3>
+                </CollapsibleTrigger>
+                <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setIsFilterOpen(prev => !prev)}>
+                    <ChevronDown className={`h-5 w-5 transition-transform ${isFilterOpen ? 'rotate-180' : ''}`} />
+                </Button>
+            </div>
              <CollapsibleContent>
                 <div className="p-4 mt-2 border rounded-lg md:p-0 md:mt-0 md:border-none space-y-4">
                     <div className="relative">
