@@ -1,3 +1,5 @@
+import { Timestamp } from "firebase/firestore";
+
 export type Condition = 'yangi' | 'yaxshi' | 'yomon';
 
 export interface Book {
@@ -10,9 +12,9 @@ export interface Book {
   category: string;
   city: string;
   imageUrl: string;
-  createdAt: string;
+  createdAt: string | Timestamp;
   sellerId: string;
-  sellerContact?: {
+  sellerContact: {
     name: string;
     phone: string;
   };
@@ -22,5 +24,5 @@ export interface User {
   id: string;
   username: string;
   email: string;
-  createdAt: string;
+  createdAt: string | Timestamp;
 }

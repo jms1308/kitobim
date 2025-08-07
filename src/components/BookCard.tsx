@@ -6,6 +6,7 @@ import type { Book } from '@/lib/types';
 import { MapPin, CalendarDays } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { uz } from 'date-fns/locale';
+import { Timestamp } from 'firebase/firestore';
 
 interface BookCardProps {
   book: Book;
@@ -17,6 +18,13 @@ export default function BookCard({ book }: BookCardProps) {
     yaxshi: 'secondary',
     yomon: 'destructive',
   } as const;
+
+  const getBookDate = () => {
+      if (book.createdAt instanceof Timestamp) {
+          return book.createdAt.toDate();
+      }
+      return new Date(book.createdAt);
+  }
 
   return (
     <Card className="flex flex-col overflow-hidden rounded-2xl shadow-lg hover:shadow-xl transition-shadow duration-300 h-full">
@@ -54,7 +62,7 @@ export default function BookCard({ book }: BookCardProps) {
             </div>
             <div className='flex items-center gap-1'>
                 <CalendarDays className="h-3 w-3" />
-                <span>{formatDistanceToNow(new Date(book.createdAt), { addSuffix: true, locale: uz })}</span>
+                <span>{formatDistanceToNow(getBookDate(), { addSuffix: true, locale: uz })}</span>
             </div>
         </div>
       </CardFooter>

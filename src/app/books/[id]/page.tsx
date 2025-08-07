@@ -18,6 +18,7 @@ import {
 import { Phone, User, MapPin, Tag, BookOpen, ThumbsUp, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
 import { uz } from 'date-fns/locale';
+import { Timestamp } from 'firebase/firestore';
 
 export default function BookDetailsPage({ params }: { params: { id: string } }) {
   const [book, setBook] = useState<Book | null>(null);
@@ -49,6 +50,13 @@ export default function BookDetailsPage({ params }: { params: { id: string } }) 
     yomon: 'destructive',
   } as const;
 
+  const getBookDate = () => {
+      if (book.createdAt instanceof Timestamp) {
+          return book.createdAt.toDate();
+      }
+      return new Date(book.createdAt);
+  }
+
   return (
     <div className="grid md:grid-cols-2 gap-8 md:gap-12 max-w-6xl mx-auto bg-card p-8 rounded-2xl shadow-lg">
       <div className="w-full">
@@ -72,7 +80,7 @@ export default function BookDetailsPage({ params }: { params: { id: string } }) 
         <div className="space-y-4 text-sm text-foreground/80 mb-6">
             <div className="flex items-center gap-3"><MapPin className="h-5 w-5 text-primary" /> <span>{book.city}</span></div>
             <div className="flex items-center gap-3"><Tag className="h-5 w-5 text-primary" /> <span>{book.category}</span></div>
-            <div className="flex items-center gap-3"><Calendar className="h-5 w-5 text-primary" /> <span>E'lon qo'yildi: {format(new Date(book.createdAt), "d MMMM, yyyy", {locale: uz})}</span></div>
+            <div className="flex items-center gap-3"><Calendar className="h-5 w-5 text-primary" /> <span>E'lon qo'yildi: {format(getBookDate(), "d MMMM, yyyy", {locale: uz})}</span></div>
         </div>
 
         <div>

@@ -1,13 +1,23 @@
-import { mockBooks, mockUsers } from './mock-data';
+import { db, auth } from './firebase';
+import { collection, getDocs, doc, getDoc, addDoc, deleteDoc, query, where, orderBy, serverTimestamp, Timestamp } from 'firebase/firestore';
 import type { Book, User } from './types';
 
-const API_DELAY = 500;
+const API_DELAY = 0; // No more mock delay needed
 
-let books: Book[] = [...mockBooks];
-let users: (User & { passwordHash: string })[] = [...mockUsers];
+const booksCollection = collection(db, 'books');
+const usersCollection = collection(db, 'users');
 
 // Simulate network delay
 const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
+
+// Helper to convert Firestore Timestamp to string
+const convertBookTimestamps = (book: Book): Book => {
+    if (book.createdAt instanceof Timestamp) {
+        return { ...book, createdAt: book.createdAt.toDate().toISOString() };
+    }
+    return book;
+};
+
 
 export const getBooks = async ({
   category,
@@ -23,71 +33,114 @@ export const getBooks = async ({
   userId?: string;
 }): Promise<Book[]> => {
   await delay(API_DELAY);
-  let filteredBooks = [...books];
-
-  if (category) {
-    filteredBooks = filteredBooks.filter(book => book.category === category);
+  
+  let q = query(booksCollection, orderBy('createdAt', 'desc'));
+  
+  if (category && category !== 'all') {
+    q = query(q, where('category', '==', category));
   }
-  if (city) {
-    filteredBooks = filteredBooks.filter(book => book.city === city);
-  }
-  if (minPrice !== undefined) {
-    filteredBooks = filteredBooks.filter(book => book.price >= minPrice);
-  }
-  if (maxPrice !== undefined) {
-    filteredBooks = filteredBooks.filter(book => book.price <= maxPrice);
+  if (city && city !== 'all') {
+    q = query(q, where('city', '==', city));
   }
   if (userId) {
-    filteredBooks = filteredBooks.filter(book => book.sellerId === userId);
+    q = query(q, where('sellerId', '==', userId));
   }
 
-  return JSON.parse(JSON.stringify(filteredBooks));
+  const querySnapshot = await getDocs(q);
+  let booksData = querySnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Book));
+
+  if (minPrice !== undefined) {
+    booksData = booksData.filter(book => book.price >= minPrice);
+  }
+  if (maxPrice !== undefined) {
+    booksData = booksData.filter(book => book.price <= maxPrice);
+  }
+
+  return booksData.map(convertBookTimestamps);
 };
 
 export const getBookById = async (id: string): Promise<Book | undefined> => {
   await delay(API_DELAY);
-  const book = books.find(book => book.id === id);
-  if(!book) return undefined;
+  const bookDocRef = doc(db, 'books', id);
+  const bookSnap = await getDoc(bookDocRef);
+
+  if (!bookSnap.exists()) {
+    return undefined;
+  }
   
-  const seller = users.find(user => user.id === book.sellerId);
-  return JSON.parse(JSON.stringify({
-    ...book,
-    sellerContact: {
-        name: seller?.username || 'Noma\'lum',
-        phone: '+998 XX XXX XX XX' // Don't expose real phone number
-    }
-  }));
+  let bookData = { ...bookSnap.data(), id: bookSnap.id } as Book;
+
+  const sellerDocRef = doc(db, 'users', bookData.sellerId);
+  const sellerSnap = await getDoc(sellerDocRef);
+
+  if (sellerSnap.exists()) {
+     const sellerData = sellerSnap.data() as User;
+     bookData.sellerContact = {
+         name: sellerData.username,
+         phone: '+998 XX XXX XX XX' // Keep phone number private
+     };
+  } else {
+     bookData.sellerContact = {
+         name: 'Noma\'lum',
+         phone: '+998 XX XXX XX XX'
+     };
+  }
+  
+  return convertBookTimestamps(bookData);
 };
 
-export const addBook = async (bookData: Omit<Book, 'id' | 'createdAt'>): Promise<Book> => {
+export const addBook = async (bookData: Omit<Book, 'id' | 'createdAt' | 'sellerContact'>): Promise<Book> => {
   await delay(API_DELAY);
-  const newBook: Book = {
-    ...bookData,
-    id: String(Date.now()),
-    createdAt: new Date().toISOString(),
-  };
-  books.unshift(newBook);
-  return JSON.parse(JSON.stringify(newBook));
+  
+  const docRef = await addDoc(booksCollection, {
+      ...bookData,
+      createdAt: serverTimestamp(),
+  });
+
+  const newBookSnap = await getDoc(docRef);
+  const newBook = { ...newBookSnap.data(), id: newBookSnap.id } as Book;
+  
+  return convertBookTimestamps(newBook);
 };
 
 export const deleteBook = async (id: string, userId: string): Promise<{ success: boolean }> => {
   await delay(API_DELAY);
-  const bookIndex = books.findIndex(book => book.id === id && book.sellerId === userId);
-  if (bookIndex > -1) {
-    books.splice(bookIndex, 1);
+  const bookDocRef = doc(db, 'books', id);
+  const bookSnap = await getDoc(bookDocRef);
+
+  if (bookSnap.exists() && bookSnap.data().sellerId === userId) {
+    await deleteDoc(bookDocRef);
     return { success: true };
   }
+  
   return { success: false };
 };
 
 export const getCategories = async (): Promise<string[]> => {
     await delay(100);
-    const categories = new Set(books.map(b => b.category));
+    const querySnapshot = await getDocs(booksCollection);
+    const categories = new Set(querySnapshot.docs.map(doc => doc.data().category as string));
     return Array.from(categories);
 }
 
 export const getCities = async (): Promise<string[]> => {
     await delay(100);
-    const cities = new Set(books.map(b => b.city));
+    const querySnapshot = await getDocs(booksCollection);
+    const cities = new Set(querySnapshot.docs.map(doc => doc.data().city as string));
     return Array.from(cities);
+}
+
+export const getUserById = async (id: string): Promise<User | null> => {
+    const userDocRef = doc(db, 'users', id);
+    const userSnap = await getDoc(userDocRef);
+    if (userSnap.exists()) {
+        const userData = userSnap.data();
+        return {
+            id: userSnap.id,
+            username: userData.username,
+            email: userData.email,
+            createdAt: (userData.createdAt as Timestamp).toDate().toISOString()
+        };
+    }
+    return null;
 }

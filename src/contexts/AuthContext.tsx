@@ -1,11 +1,22 @@
 "use client";
 
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import type { User } from '@/lib/types';
+import type { User as AppUser } from '@/lib/types';
 import { useRouter } from 'next/navigation';
+import { auth, db } from '@/lib/firebase';
+import { 
+  onAuthStateChanged, 
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword, 
+  signOut,
+  User as FirebaseUser
+} from 'firebase/auth';
+import { doc, setDoc, getDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
+import { getUserById } from '@/lib/api';
+
 
 interface AuthContextType {
-  user: User | null;
+  user: AppUser | null;
   isAuthenticated: boolean;
   loading: boolean;
   login: (email: string, pass: string) => Promise<boolean>;
@@ -16,62 +27,76 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
-    try {
-      const storedUser = localStorage.getItem('kitob_bozori_user');
-      if (storedUser) {
-        setUser(JSON.parse(storedUser));
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        const appUser = await getUserById(firebaseUser.uid);
+        setUser(appUser);
+      } else {
+        setUser(null);
       }
-    } catch (error) {
-      console.error("Failed to parse user from localStorage", error);
-      localStorage.removeItem('kitob_bozori_user');
-    } finally {
       setLoading(false);
-    }
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const login = async (email: string, pass: string): Promise<boolean> => {
-    // This is mock logic. In a real app, you'd call your backend.
-    if (email === 'kitobxon@example.com' && pass === 'password') {
-      const loggedInUser: User = {
-        id: 'user-1',
-        username: 'Kitobxon',
-        email: 'kitobxon@example.com',
-        createdAt: new Date().toISOString(),
-      };
-      localStorage.setItem('kitob_bozori_user', JSON.stringify(loggedInUser));
-      setUser(loggedInUser);
+    setLoading(true);
+    try {
+      await signInWithEmailAndPassword(auth, email, pass);
       return true;
+    } catch (error) {
+      console.error("Login error:", error);
+      return false;
+    } finally {
+        // We don't setLoading(false) here because the onAuthStateChanged listener will do it.
     }
-    return false;
   };
 
   const signup = async (username: string, email: string, pass: string): Promise<boolean> => {
-     // Mock logic
-    const newUser: User = {
-      id: `user-${Date.now()}`,
-      username,
-      email,
-      createdAt: new Date().toISOString()
-    };
-    localStorage.setItem('kitob_bozori_user', JSON.stringify(newUser));
-    setUser(newUser);
-    return true;
+    setLoading(true);
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
+      const firebaseUser = userCredential.user;
+      
+      const newUser: Omit<AppUser, 'id'> = {
+        username,
+        email,
+        createdAt: new Date().toISOString() // This will be replaced by server timestamp
+      };
+
+      await setDoc(doc(db, "users", firebaseUser.uid), {
+          ...newUser,
+          createdAt: serverTimestamp()
+      });
+
+      // The onAuthStateChanged listener will handle setting the user state.
+      return true;
+    } catch (error) {
+      console.error("Signup error:", error);
+      setLoading(false);
+      return false;
+    }
   };
 
-  const logout = () => {
-    localStorage.removeItem('kitob_bozori_user');
-    setUser(null);
-    router.push('/login');
+  const logout = async () => {
+    try {
+      await signOut(auth);
+      setUser(null);
+      router.push('/login');
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
   };
 
   const value = {
     user,
-    isAuthenticated: !!user,
+    isAuthenticated: !loading && !!user,
     loading,
     login,
     signup,

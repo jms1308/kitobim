@@ -10,6 +10,7 @@ import { getBooks } from '@/lib/api';
 import type { Book } from '@/lib/types';
 import { Loader2, Mail, User as UserIcon, Calendar, Book as BookIcon } from 'lucide-react';
 import { format } from 'date-fns';
+import { Timestamp } from 'firebase/firestore';
 
 function ProfilePageContent() {
   const { user, logout } = useAuth();
@@ -30,6 +31,13 @@ function ProfilePageContent() {
 
   if (!user) {
     return null; // AuthGuard handles redirection
+  }
+
+  const getJoinDate = () => {
+      if (user.createdAt instanceof Timestamp) {
+          return user.createdAt.toDate();
+      }
+      return new Date(user.createdAt);
   }
 
   return (
@@ -53,7 +61,7 @@ function ProfilePageContent() {
                 <Calendar className="h-8 w-8 text-primary"/>
                 <div>
                     <p className="text-sm text-muted-foreground">Ro'yxatdan o'tgan sana</p>
-                    <p className="font-semibold">{format(new Date(user.createdAt), 'd MMMM, yyyy')}</p>
+                    <p className="font-semibold">{format(getJoinDate(), 'd MMMM, yyyy')}</p>
                 </div>
             </div>
              <div className="flex items-center gap-4 bg-secondary p-4 rounded-lg">

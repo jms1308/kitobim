@@ -36,6 +36,9 @@ function MyPostsPageContent() {
         const userBooks = await getBooks({ userId: user.id });
         setBooks(userBooks);
         setLoading(false);
+      } else {
+        // If user is not logged in, we shouldn't be here, but as a fallback, stop loading.
+        setLoading(false);
       }
     };
     fetchUserBooks();
