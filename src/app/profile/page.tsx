@@ -23,13 +23,6 @@ function ProfilePageContent() {
     return null; // AuthGuard handles redirection
   }
   
-  const getJoinDate = () => {
-    if (typeof user.createdAt === 'string') {
-      return new Date(user.createdAt);
-    }
-    return user.createdAt;
-  }
-
   return (
     <div className="max-w-4xl mx-auto">
       <Card className="w-full shadow-2xl">
@@ -51,7 +44,7 @@ function ProfilePageContent() {
                 <Calendar className="h-8 w-8 text-primary"/>
                 <div>
                     <p className="text-sm text-muted-foreground">Ro'yxatdan o'tgan sana</p>
-                    <p className="font-semibold">{format(getJoinDate(), 'd MMMM, yyyy')}</p>
+                    <p className="font-semibold">{format(new Date(user.createdAt), 'd MMMM, yyyy')}</p>
                 </div>
             </div>
              <div className="flex items-center gap-4 bg-secondary p-4 rounded-lg">

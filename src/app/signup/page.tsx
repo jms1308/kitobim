@@ -44,29 +44,30 @@ export default function SignupPage() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
-    const { success, errorCode } = await signup(values.username, values.email, values.password);
+    const { success, error } = await signup(values.username, values.email, values.password);
     if (success) {
       toast({
-        title: "Muvaffaqiyatli!",
-        description: "Hisobingiz yaratildi va tizimga kirdingiz.",
+        title: "Deyarli tayyor!",
+        description: "Hisobingizni tasdiqlash uchun emailingizga yuborilgan havolani bosing.",
       });
-      router.push('/profile'); // Redirect to profile page on successful signup
+      // Don't redirect, user needs to confirm email.
+      // The onAuthStateChange listener will handle the redirect after confirmation.
     } else {
-      if (errorCode === 'auth/email-already-in-use') {
-        toast({
-          variant: "destructive",
-          title: "Xatolik!",
-          description: "Bu email manzili allaqachon ro'yxatdan o'tgan.",
-        });
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Xatolik!",
-          description: "Ro'yxatdan o'tishda xatolik yuz berdi. Iltimos, qayta urinib ko'ring.",
-        });
-      }
-      setIsSubmitting(false);
+        if (error && error.includes("User already registered")) {
+            toast({
+              variant: "destructive",
+              title: "Xatolik!",
+              description: "Bu email manzili allaqachon ro'yxatdan o'tgan.",
+            });
+        } else {
+             toast({
+              variant: "destructive",
+              title: "Xatolik!",
+              description: error || "Ro'yxatdan o'tishda xatolik yuz berdi. Iltimos, qayta urinib ko'ring.",
+            });
+        }
     }
+    setIsSubmitting(false);
   }
 
   return (

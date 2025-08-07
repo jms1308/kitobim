@@ -1,114 +1,180 @@
+"use client";
+
 import type { Book, User } from './types';
-import { mockBooks, mockUsers } from './mock-data';
-
-const convertBookTimestamps = (book: Book): Book => {
-    if (book.createdAt instanceof Date) {
-        return { ...book, createdAt: book.createdAt.toISOString() };
-    }
-     if (typeof book.createdAt !== 'string') {
-        // Fallback for any other type
-        return { ...book, createdAt: new Date().toISOString() };
-    }
-    return book;
-};
+import { supabase } from './supabaseClient';
 
 
-export const getBooks = ({
+export const getBooks = async ({
   category,
   city,
   minPrice,
   maxPrice,
   userId,
+  searchTerm,
+  limit
 }: {
   category?: string;
   city?: string;
   minPrice?: number;
   maxPrice?: number;
   userId?: string;
-}): Book[] => {
-  let books = mockBooks;
+  searchTerm?: string;
+  limit?: number;
+}): Promise<Book[]> => {
+    
+    let query = supabase.from('books').select(`
+        *,
+        seller:profiles(username)
+    `);
 
-  if (category && category !== 'all') {
-    books = books.filter(book => book.category === category);
-  }
-  if (city && city !== 'all') {
-    books = books.filter(book => book.city === city);
-  }
-  if (userId) {
-    books = books.filter(book => book.sellerId === userId);
-  }
-  if (minPrice !== undefined) {
-    books = books.filter(book => book.price >= minPrice);
-  }
-  if (maxPrice !== undefined) {
-    books = books.filter(book => book.price <= maxPrice);
-  }
+    if (category && category !== 'all') {
+        query = query.eq('category', category);
+    }
+    if (city && city !== 'all') {
+        query = query.eq('city', city);
+    }
+    if (userId) {
+        query = query.eq('sellerId', userId);
+    }
+    if (minPrice !== undefined) {
+        query = query.gte('price', minPrice);
+    }
+    if (maxPrice !== undefined) {
+        query = query.lte('price', maxPrice);
+    }
+    if (searchTerm) {
+        query = query.or(`title.ilike.%${searchTerm}%,author.ilike.%${searchTerm}%`)
+    }
 
-  return books.map(convertBookTimestamps);
+    query = query.order('createdAt', { ascending: false });
+
+    if(limit) {
+        query = query.limit(limit);
+    }
+
+    const { data, error } = await query;
+    
+    if (error) {
+        console.error('Error fetching books:', error);
+        return [];
+    }
+
+    return data.map(item => ({
+        ...item,
+        sellerContact: {
+            name: (item.seller as any)?.username || 'Noma\'lum',
+            phone: '+998 XX XXX XX XX' // This can be enhanced later
+        }
+    })) as Book[];
 };
 
-export const getBookById = (id: string): Book | undefined => {
-  const book = mockBooks.find(b => b.id === id);
-  if (book) {
-     const seller = mockUsers.find(u => u.id === book.sellerId);
-     if(seller) {
-        book.sellerContact = { name: seller.username, phone: '+998 XX XXX XX XX' };
-     }
-     return convertBookTimestamps(book);
-  }
-  return undefined;
+export const getBookById = async (id: string): Promise<Book | null> => {
+    const { data, error } = await supabase
+        .from('books')
+        .select(`
+            *,
+            seller:profiles(username, phone)
+        `)
+        .eq('id', id)
+        .single();
+
+    if (error) {
+        console.error('Error fetching book by id:', error);
+        return null;
+    }
+
+    return {
+        ...data,
+        sellerContact: {
+            name: (data.seller as any)?.username || 'Noma\'lum',
+            phone: (data.seller as any)?.phone || '+998 XX XXX XX XX'
+        }
+    } as Book;
 };
 
-export const addBook = (bookData: Omit<Book, 'id' | 'createdAt' | 'sellerContact'>): Book => {
-  const newBook: Book = {
-    ...bookData,
-    id: `book-${Date.now()}`,
-    createdAt: new Date(),
-  };
-  mockBooks.unshift(newBook);
-  return convertBookTimestamps(newBook);
+export const addBook = async (bookData: Omit<Book, 'id' | 'createdAt' | 'sellerContact'>): Promise<Book | null> => {
+    const { data, error } = await supabase
+        .from('books')
+        .insert({ ...bookData, createdAt: new Date().toISOString() })
+        .select()
+        .single();
+    
+    if(error) {
+        console.error("Error adding book:", error);
+        return null;
+    }
+    
+    return data as Book;
 };
 
-export const deleteBook = (id: string, userId: string): { success: boolean } => {
-  const bookIndex = mockBooks.findIndex(b => b.id === id && b.sellerId === userId);
-  if (bookIndex > -1) {
-    mockBooks.splice(bookIndex, 1);
+export const deleteBook = async (id: string, userId: string): Promise<{ success: boolean }> => {
+    const { error } = await supabase
+        .from('books')
+        .delete()
+        .eq('id', id)
+        .eq('sellerId', userId);
+
+    if (error) {
+        console.error("Error deleting book:", error);
+        return { success: false };
+    }
     return { success: true };
-  }
-  return { success: false };
 };
 
-export const getCategories = (): string[] => {
-    const categories = new Set(mockBooks.map(doc => doc.category as string));
+export const getCategories = async (): Promise<string[]> => {
+    const { data, error } = await supabase
+        .from('books')
+        .select('category');
+    
+    if (error) {
+        console.error("Error fetching categories:", error);
+        return [];
+    }
+
+    const categories = new Set(data.map(doc => doc.category as string));
     return Array.from(categories);
 }
 
-export const getCities = (): string[] => {
-    const cities = new Set(mockBooks.map(doc => doc.city as string));
+export const getCities = async (): Promise<string[]> => {
+     const { data, error } = await supabase
+        .from('books')
+        .select('city');
+
+    if (error) {
+        console.error("Error fetching cities:", error);
+        return [];
+    }
+    const cities = new Set(data.map(doc => doc.city as string));
     return Array.from(cities);
 }
 
-export const getUserById = (id: string): User | null => {
-    const user = mockUsers.find(u => u.id === id);
-    if(user) {
-        const postsCount = mockBooks.filter(b => b.sellerId === id).length;
-        const { passwordHash, ...userWithoutPassword } = user;
-        
-        let createdAtString: string;
-        if (user.createdAt instanceof Date) {
-            createdAtString = user.createdAt.toISOString();
-        } else if (typeof user.createdAt === 'string') {
-            createdAtString = user.createdAt;
-        }
-        else {
-            createdAtString = new Date().toISOString();
-        }
+export const getUserProfile = async (id: string): Promise<User | null> => {
+    const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', id)
+        .single();
 
-        return {
-            ...userWithoutPassword,
-            createdAt: createdAtString,
-            postsCount,
-        }
+    if (profileError) {
+        console.error('Error fetching user profile:', profileError);
+        return null;
     }
-    return null;
+    
+    const { count, error: countError } = await supabase
+        .from('books')
+        .select('*', { count: 'exact', head: true })
+        .eq('sellerId', id);
+
+    if (countError) {
+        console.error('Error fetching posts count:', countError);
+        // Continue without count if it fails
+    }
+
+    return {
+        id: profile.id,
+        username: profile.username,
+        email: profile.email,
+        createdAt: profile.created_at,
+        postsCount: count || 0,
+    };
 }

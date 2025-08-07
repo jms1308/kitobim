@@ -11,7 +11,7 @@ export interface Book {
   category: string;
   city: string;
   imageUrl: string;
-  createdAt: string | Date;
+  createdAt: string;
   sellerId: string;
   sellerContact?: {
     name: string;
@@ -22,7 +22,7 @@ export interface Book {
 export interface User {
   id: string;
   username: string;
-  email: string;
-  createdAt: string | Date;
+  email: string | undefined;
+  createdAt: string;
   postsCount: number;
 }

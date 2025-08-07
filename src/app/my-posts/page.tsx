@@ -21,31 +21,32 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
+import { Skeleton } from '@/components/ui/skeleton';
 
 function MyPostsPageContent() {
   const { user } = useAuth();
   const { toast } = useToast();
-
-  // We manage the list of books in state so we can update it after deletion.
-  const [userBooks, setUserBooks] = useState<Book[]>(() => {
-    if (user) {
-      return getBooks({ userId: user.id });
-    }
-    return [];
-  });
+  const [userBooks, setUserBooks] = useState<Book[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   
-  // Update books if user changes (e.g. logs in/out)
   useEffect(() => {
-    if(user) {
-        setUserBooks(getBooks({ userId: user.id }));
-    } else {
-        setUserBooks([]);
+    const fetchUserBooks = async () => {
+        if(user) {
+            setIsLoading(true);
+            const books = await getBooks({ userId: user.id });
+            setUserBooks(books);
+            setIsLoading(false);
+        } else {
+            setUserBooks([]);
+            setIsLoading(false);
+        }
     }
+    fetchUserBooks();
   }, [user]);
 
-  const handleDelete = (bookId: string) => {
+  const handleDelete = async (bookId: string) => {
     if (!user) return;
-    const result = deleteBook(bookId, user.id);
+    const result = await deleteBook(bookId, user.id);
     if (result.success) {
       setUserBooks(prevBooks => prevBooks.filter(book => book.id !== bookId));
       toast({
@@ -63,6 +64,17 @@ function MyPostsPageContent() {
 
   if (!user) {
       return null;
+  }
+  
+  if(isLoading) {
+    return (
+        <div>
+            <h1 className="text-3xl font-bold font-headline mb-6">Mening e'lonlarim</h1>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {Array.from({length: 4}).map((_, i) => <Skeleton key={i} className="h-96 w-full" />)}
+            </div>
+        </div>
+    )
   }
 
   return (

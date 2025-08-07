@@ -45,8 +45,7 @@ function PostBookPageContent() {
   const { toast } = useToast();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-
+  
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -68,10 +67,15 @@ function PostBookPageContent() {
     setIsLoading(true);
     try {
         const newBook = await addBook({ ...values, sellerId: user.id });
-        toast({ title: "Muvaffaqiyat!", description: "Sizning e'loningiz joylashtirildi." });
-        router.push(`/books/${newBook.id}`);
+        if (newBook) {
+            toast({ title: "Muvaffaqiyat!", description: "Sizning e'loningiz joylashtirildi." });
+            router.push(`/books/${newBook.id}`);
+        } else {
+             toast({ variant: 'destructive', title: "Xatolik!", description: "E'lonni joylashtirishda xato yuz berdi." });
+        }
     } catch (error) {
         toast({ variant: 'destructive', title: "Xatolik!", description: "E'lonni joylashtirishda xato yuz berdi." });
+    } finally {
         setIsLoading(false);
     }
   }

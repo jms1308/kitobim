@@ -4,16 +4,17 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import type { User as AppUser } from '@/lib/types';
 import { useRouter } from 'next/navigation';
-import { getUserById } from '@/lib/api';
-import { mockUsers } from '@/lib/mock-data';
+import { supabase } from '@/lib/supabaseClient';
+import { getUserProfile } from '@/lib/api';
+import type { AuthChangeEvent, Session, User } from '@supabase/supabase-js';
 
 
 interface AuthContextType {
   user: AppUser | null;
   isAuthenticated: boolean;
   loading: boolean;
-  login: (email: string, pass: string) => Promise<boolean>;
-  signup: (username: string, email: string, pass: string) => Promise<{ success: boolean; errorCode?: string }>;
+  login: (email: string, pass: string) => Promise<{ success: boolean; error?: string }>;
+  signup: (username: string, email: string, pass: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
 }
 
@@ -25,79 +26,71 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
-    // Check local storage for a logged-in user
-    const checkUser = async () => {
-      try {
-        const storedUserId = localStorage.getItem('userId');
-        if (storedUserId) {
-          const appUser = await getUserById(storedUserId);
-          setUser(appUser);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event: AuthChangeEvent, session: Session | null) => {
+        setLoading(true);
+        if (session && session.user) {
+          const profile = await getUserProfile(session.user.id);
+          setUser(profile);
+        } else {
+          setUser(null);
         }
-      } catch (e) {
-        console.error("Error fetching user from mock API", e);
-      } finally {
         setLoading(false);
       }
+    );
+    
+    // Initial check
+    const checkInitialSession = async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+         if (session && session.user) {
+          const profile = await getUserProfile(session.user.id);
+          setUser(profile);
+        }
+        setLoading(false);
+    }
+    checkInitialSession();
+
+    return () => {
+      subscription.unsubscribe();
     };
-    checkUser();
   }, []);
 
-  const login = async (email: string, pass: string): Promise<boolean> => {
+  const login = async (email: string, pass: string) => {
     setLoading(true);
-    try {
-      // Find user in mock data
-      const mockUser = mockUsers.find(u => u.email === email);
-      if (mockUser) { // In a real app, you'd check the password hash
-        const appUser = await getUserById(mockUser.id);
-        setUser(appUser);
-        localStorage.setItem('userId', mockUser.id);
-        return true;
-      }
-      return false;
-    } catch (error) {
-      console.error("Login error:", error);
-      setUser(null);
-      return false;
-    } finally {
-        setLoading(false);
+    const { error } = await supabase.auth.signInWithPassword({ email, password: pass });
+    setLoading(false);
+    
+    if (error) {
+        return { success: false, error: error.message };
     }
+    return { success: true };
   };
 
-  const signup = async (username: string, email: string, pass: string): Promise<{ success: boolean; errorCode?: string }> => {
+  const signup = async (username: string, email: string, pass: string) => {
     setLoading(true);
-    try {
-      // Check if user exists
-      if (mockUsers.some(u => u.email === email)) {
-        return { success: false, errorCode: 'auth/email-already-in-use' };
-      }
-      
-      const newUser: AppUser = {
-        id: `user-${Date.now()}`,
-        username,
+    const { data, error } = await supabase.auth.signUp({
         email,
-        createdAt: new Date(),
-        postsCount: 0,
-      };
+        password: pass,
+        options: {
+            data: {
+                username: username,
+            }
+        }
+    });
 
-      // Add to mock data (in real app, this would be a DB call)
-      // We don't store passwords in this example.
-      mockUsers.push({ ...newUser, passwordHash: '...' });
+    setLoading(false);
 
-      setUser(newUser);
-      localStorage.setItem('userId', newUser.id);
-      
-      return { success: true };
-    } catch (error: any) {
-      console.error("Signup error:", error);
-      return { success: false, errorCode: error.code };
-    } finally {
-      setLoading(false);
+    if (error) {
+        return { success: false, error: error.message };
     }
+    // Supabase sends a confirmation email, user needs to verify.
+    // The onAuthStateChange listener will handle setting the user session after verification.
+    return { success: true };
   };
 
   const logout = async () => {
+    await supabase.auth.signOut();
     setUser(null);
-    localStorage.removeItem('userId');
     router.push('/login');
   };
 

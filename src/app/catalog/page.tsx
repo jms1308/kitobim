@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { getBooks, getCategories, getCities } from '@/lib/api';
 import type { Book } from '@/lib/types';
 import BookCard from '@/components/BookCard';
@@ -22,12 +22,10 @@ import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, Pagi
 const ITEMS_PER_PAGE = 12;
 
 export default function CatalogPage() {
-  const allBooks = getBooks({});
-  const categoriesData = getCategories();
-  const citiesData = getCities();
-
-  const [categories] = useState<string[]>(['Barcha kategoriyalar', ...categoriesData]);
-  const [cities] = useState<string[]>(['Barcha shaharlar', ...citiesData]);
+  const [allBooks, setAllBooks] = useState<Book[]>([]);
+  const [categories, setCategories] = useState<string[]>(['Barcha kategoriyalar']);
+  const [cities, setCities] = useState<string[]>(['Barcha shaharlar']);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Filter states
   const [searchQuery, setSearchQuery] = useState('');
@@ -36,6 +34,22 @@ export default function CatalogPage() {
   const [priceRange, setPriceRange] = useState([0, 200000]);
   
   const [currentPage, setCurrentPage] = useState(1);
+
+  useEffect(() => {
+    const fetchData = async () => {
+        setIsLoading(true);
+        const [booksData, categoriesData, citiesData] = await Promise.all([
+            getBooks({}),
+            getCategories(),
+            getCities(),
+        ]);
+        setAllBooks(booksData);
+        setCategories(['Barcha kategoriyalar', ...categoriesData]);
+        setCities(['Barcha shaharlar', ...citiesData]);
+        setIsLoading(false);
+    }
+    fetchData();
+  }, [])
 
   const filteredBooks = useMemo(() => {
     return allBooks
@@ -125,7 +139,11 @@ export default function CatalogPage() {
       </aside>
       <main className="w-full md:w-3/4 lg:w-4/5">
         <h1 className="text-3xl font-bold font-headline mb-6">Barcha kitoblar</h1>
-        
+        {isLoading ? (
+             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {Array.from({length: 12}).map((_, i) => <Skeleton key={i} className="h-96 w-full" />)}
+            </div>
+        ) : (
           <>
             {filteredBooks.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -158,6 +176,7 @@ export default function CatalogPage() {
                 </Pagination>
             )}
           </>
+        )}
       </main>
     </div>
   );

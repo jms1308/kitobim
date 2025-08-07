@@ -43,7 +43,7 @@ export default function LoginPage() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
     try {
-      const success = await login(values.email, values.password);
+      const { success, error } = await login(values.email, values.password);
       if (success) {
         toast({
           title: "Muvaffaqiyatli!",
@@ -54,7 +54,7 @@ export default function LoginPage() {
         toast({
           variant: "destructive",
           title: "Xatolik!",
-          description: "Email yoki parol noto'g'ri.",
+          description: error || "Email yoki parol noto'g'ri.",
         });
       }
     } catch (error) {

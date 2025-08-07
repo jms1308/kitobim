@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { getBookById } from '@/lib/api';
 import type { Book } from '@/lib/types';
 import Image from 'next/image';
@@ -14,13 +14,55 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { Phone, User, MapPin, Tag, BookOpen, ThumbsUp, Calendar } from 'lucide-react';
+import { Phone, User, MapPin, Tag, BookOpen, ThumbsUp, Calendar, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { uz } from 'date-fns/locale';
+import { Skeleton } from '@/components/ui/skeleton';
+
+function BookDetailsSkeleton() {
+    return (
+        <div className="grid md:grid-cols-2 gap-8 md:gap-12 max-w-6xl mx-auto">
+            <Skeleton className="w-full h-[600px] rounded-xl" />
+            <div className="flex flex-col space-y-4">
+                <Skeleton className="h-6 w-24" />
+                <Skeleton className="h-12 w-3/4" />
+                <Skeleton className="h-8 w-1/2" />
+                <Skeleton className="h-10 w-1/3 mb-4" />
+                <div className="space-y-4">
+                    <Skeleton className="h-6 w-full" />
+                    <Skeleton className="h-6 w-full" />
+                    <Skeleton className="h-6 w-full" />
+                </div>
+                <div className="space-y-2 pt-4">
+                    <Skeleton className="h-6 w-1/4" />
+                    <Skeleton className="h-20 w-full" />
+                </div>
+                <div className="mt-auto pt-6">
+                    <Skeleton className="h-12 w-full" />
+                </div>
+            </div>
+        </div>
+    )
+}
 
 export default function BookDetailsPage({ params }: { params: { id: string } }) {
-  // Data is fetched synchronously, no loading state needed.
-  const book = getBookById(params.id);
+  const [book, setBook] = useState<Book | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchBook = async () => {
+        setIsLoading(true);
+        const bookData = await getBookById(params.id);
+        setBook(bookData);
+        setIsLoading(false);
+    }
+    fetchBook();
+  }, [params.id]);
+
+
+  if (isLoading) {
+    return <BookDetailsSkeleton />;
+  }
 
   if (!book) {
     return <div className="text-center py-10">Kitob topilmadi.</div>;
@@ -32,12 +74,6 @@ export default function BookDetailsPage({ params }: { params: { id: string } }) 
     yomon: 'destructive',
   } as const;
 
-  const getBookDate = () => {
-      if (typeof book.createdAt === 'string') {
-        return new Date(book.createdAt);
-      }
-      return book.createdAt;
-  }
 
   return (
     <div className="grid md:grid-cols-2 gap-8 md:gap-12 max-w-6xl mx-auto bg-card p-8 rounded-2xl shadow-lg">
@@ -62,7 +98,7 @@ export default function BookDetailsPage({ params }: { params: { id: string } }) 
         <div className="space-y-4 text-sm text-foreground/80 mb-6">
             <div className="flex items-center gap-3"><MapPin className="h-5 w-5 text-primary" /> <span>{book.city}</span></div>
             <div className="flex items-center gap-3"><Tag className="h-5 w-5 text-primary" /> <span>{book.category}</span></div>
-            <div className="flex items-center gap-3"><Calendar className="h-5 w-5 text-primary" /> <span>E'lon qo'yildi: {format(getBookDate(), "d MMMM, yyyy", {locale: uz})}</span></div>
+            <div className="flex items-center gap-3"><Calendar className="h-5 w-5 text-primary" /> <span>E'lon qo'yildi: {format(new Date(book.createdAt), "d MMMM, yyyy", {locale: uz})}</span></div>
         </div>
 
         <div>
