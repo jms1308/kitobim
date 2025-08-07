@@ -15,7 +15,7 @@ const avatarStyles = [
 
 const getRandomAvatarUrl = (seed: string) => {
   const style = avatarStyles[Math.floor(Math.random() * avatarStyles.length)];
-  return `https://api.dicebear.com/7.x/${style}/svg?seed=${seed}&radius=50`;
+  return `https://api.dicebear.com/7.x/${style}/svg?seed=${encodeURIComponent(seed)}&radius=50`;
 }
 
 
@@ -23,6 +23,7 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   loading: boolean;
+  guestAvatarUrl: string | null;
   login: (phone: string, password: string) => Promise<{ success: boolean; error?: string }>;
   signup: (username: string, phone: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
@@ -32,7 +33,8 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true); // Only true on initial load
+  const [guestAvatarUrl, setGuestAvatarUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   const handleSetUser = useCallback((userData: Omit<User, 'avatarUrl'> | null, avatarUrl?: string) => {
@@ -60,6 +62,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
         } else {
           handleSetUser(null);
+          let guestSeed = localStorage.getItem('guestSeed');
+          if (!guestSeed) {
+            guestSeed = Math.random().toString(36).substring(7);
+            localStorage.setItem('guestSeed', guestSeed);
+          }
+          setGuestAvatarUrl(getRandomAvatarUrl(guestSeed));
         }
       } catch (error) {
         console.error("Failed to fetch user on initial load:", error);
@@ -77,6 +85,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const newAvatarUrl = getRandomAvatarUrl(data.id);
       localStorage.setItem('userId', data.id);
       localStorage.setItem('avatarUrl', newAvatarUrl);
+      localStorage.removeItem('guestSeed');
+      setGuestAvatarUrl(null);
       handleSetUser(data, newAvatarUrl);
       return { success: true };
     }
@@ -89,6 +99,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const newAvatarUrl = getRandomAvatarUrl(loggedInUser.id);
         localStorage.setItem('userId', loggedInUser.id);
         localStorage.setItem('avatarUrl', newAvatarUrl);
+        localStorage.removeItem('guestSeed');
+        setGuestAvatarUrl(null);
         handleSetUser(loggedInUser, newAvatarUrl);
         return { success: true };
       }
@@ -106,6 +118,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user,
     isAuthenticated: !!user,
     loading,
+    guestAvatarUrl,
     login,
     signup,
     logout,

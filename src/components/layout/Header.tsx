@@ -14,7 +14,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { LayoutGrid, Book, PlusCircle, User as UserIcon, LogOut, Loader2 } from 'lucide-react';
+import { LayoutGrid, Book, PlusCircle, User as UserIcon, LogOut, Loader2, LogIn } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 
@@ -25,12 +25,12 @@ const navLinks = [
 ];
 
 export default function Header() {
-  const { user, isAuthenticated, logout, loading } = useAuth();
+  const { user, isAuthenticated, logout, loading, guestAvatarUrl } = useAuth();
   const pathname = usePathname();
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center justify-between">
+      <div className="container flex h-16 items-center">
         <Logo />
         
         <nav className="hidden md:flex items-center justify-center flex-1">
@@ -48,7 +48,7 @@ export default function Header() {
           ))}
         </nav>
 
-        <div className="flex items-center justify-end" style={{minWidth: '100px'}}>
+        <div className="flex flex-1 items-center justify-end md:flex-initial" style={{minWidth: '100px'}}>
             {loading ? (
                 <Loader2 className="h-6 w-6 animate-spin" />
             ) : isAuthenticated && user ? (
@@ -85,14 +85,41 @@ export default function Header() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <div className='hidden md:flex items-center space-x-2'>
-              <Button asChild variant="ghost">
-                <Link href="/login">Kirish</Link>
-              </Button>
-              <Button asChild className="transition-transform hover:scale-105">
-                <Link href="/signup">Ro'yxatdan o'tish</Link>
-              </Button>
-            </div>
+            <>
+              {/* Desktop Auth Buttons */}
+              <div className='hidden md:flex items-center space-x-2'>
+                <Button asChild variant="ghost">
+                  <Link href="/login">Kirish</Link>
+                </Button>
+                <Button asChild className="transition-transform hover:scale-105">
+                  <Link href="/signup">Ro'yxatdan o'tish</Link>
+                </Button>
+              </div>
+
+              {/* Mobile Guest Avatar */}
+              <div className="md:hidden">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                      <Avatar className="h-9 w-9">
+                         {guestAvatarUrl && <AvatarImage src={guestAvatarUrl} alt="Guest" />}
+                        <AvatarFallback><UserIcon /></AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56" align="end" forceMount>
+                     <DropdownMenuLabel>Mehmon</DropdownMenuLabel>
+                     <DropdownMenuSeparator />
+                     <DropdownMenuItem asChild>
+                        <Link href="/login"><LogIn className="mr-2 h-4 w-4" /> Kirish</Link>
+                     </DropdownMenuItem>
+                     <DropdownMenuItem asChild>
+                        <Link href="/signup"><PlusCircle className="mr-2 h-4 w-4" /> Ro'yxatdan o'tish</Link>
+                     </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </>
           )}
         </div>
       </div>
