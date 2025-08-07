@@ -1,8 +1,7 @@
 
-
 "use client";
 
-import React, { createContext, useState, useEffect, useContext } from 'react';
+import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
 import type { User } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 import { getUserProfile, loginUser, createUser } from '@/lib/api';
@@ -33,21 +32,22 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true); // Only true on initial load
   const router = useRouter();
 
-  const handleSetUser = (userData: Omit<User, 'avatarUrl'> | null) => {
+  const handleSetUser = useCallback((userData: Omit<User, 'avatarUrl'> | null) => {
     if (userData) {
       const avatarUrl = getRandomAvatarUrl(userData.id);
       setUser({ ...userData, avatarUrl });
     } else {
       setUser(null);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    // Check for user in localStorage on initial load
-    const checkUser = async () => {
+    // This effect runs only once on initial mount to check for a logged-in user.
+    const checkUserOnLoad = async () => {
+      setLoading(true);
       try {
         const storedUserId = localStorage.getItem('userId');
         if (storedUserId) {
@@ -58,15 +58,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
              localStorage.removeItem('userId');
              handleSetUser(null);
           }
+        } else {
+          handleSetUser(null);
         }
       } catch (error) {
-        console.error("Failed to fetch user from localStorage:", error);
+        console.error("Failed to fetch user on initial load:", error);
+        handleSetUser(null);
       } finally {
         setLoading(false);
       }
     };
-    checkUser();
-  }, []);
+    checkUserOnLoad();
+  }, [handleSetUser]);
   
   const signup = async (username: string, phone: string, password: string) => {
     const { data, success, error } = await createUser(username, phone, password);
@@ -96,7 +99,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const value = {
     user,
-    isAuthenticated: !loading && !!user,
+    isAuthenticated: !!user,
     loading,
     login,
     signup,
