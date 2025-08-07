@@ -89,65 +89,65 @@ export default function BookDetailsPage({ params: { id } }: { params: { id: stri
             <ArrowLeft className="mr-2 h-4 w-4" />
             Qaytish
         </Button>
-        <div className="grid md:grid-cols-2 gap-8 md:gap-12 max-w-6xl mx-auto bg-card p-4 md:p-8 rounded-2xl shadow-lg">
-        <div className="w-full">
-            <Image
-            src={book.imageUrl}
-            alt={book.title}
-            width={600}
-            height={800}
-            className="w-full h-auto object-contain rounded-xl"
-            data-ai-hint="book cover"
-            />
-        </div>
-        <div className="flex flex-col">
-            <Badge variant={conditionVariant[book.condition]} className="capitalize w-fit mb-2">{book.condition}</Badge>
-            <h1 className="text-2xl md:text-4xl font-bold font-headline mb-2">{book.title}</h1>
-            <p className="text-base md:text-xl text-muted-foreground mb-4">{book.author}</p>
-            <p className="text-xl md:text-3xl font-bold text-primary mb-6">
-            {new Intl.NumberFormat('uz-UZ', { style: 'currency', currency: 'UZS', maximumFractionDigits: 0 }).format(book.price)}
-            </p>
-            
-            <div className="space-y-4 text-sm text-foreground/80 mb-6">
-                <div className="flex items-center gap-3"><MapPin className="h-5 w-5 text-primary" /> <span>{book.city}</span></div>
-                <div className="flex items-center gap-3"><Tag className="h-5 w-5 text-primary" /> <span>{book.category}</span></div>
-                <div className="flex items-center gap-3"><Calendar className="h-5 w-5 text-primary" /> <span>E'lon qo'yildi: {format(new Date(book.createdAt), "d MMMM, yyyy", {locale: uz})}</span></div>
-            </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 max-w-6xl mx-auto bg-card p-4 md:p-8 rounded-2xl shadow-lg">
+          <div className="w-full">
+              <Image
+              src={book.imageUrl}
+              alt={book.title}
+              width={600}
+              height={800}
+              className="w-full h-auto object-contain rounded-xl"
+              data-ai-hint="book cover"
+              />
+          </div>
+          <div className="flex flex-col min-w-0">
+              <Badge variant={conditionVariant[book.condition]} className="capitalize w-fit mb-2">{book.condition}</Badge>
+              <h1 className="text-2xl md:text-4xl font-bold font-headline mb-2 break-words">{book.title}</h1>
+              <p className="text-base md:text-xl text-muted-foreground mb-4">{book.author}</p>
+              <p className="text-xl md:text-3xl font-bold text-primary mb-6">
+              {new Intl.NumberFormat('uz-UZ', { style: 'currency', currency: 'UZS', maximumFractionDigits: 0 }).format(book.price)}
+              </p>
+              
+              <div className="space-y-4 text-sm text-foreground/80 mb-6">
+                  <div className="flex items-center gap-3"><MapPin className="h-5 w-5 text-primary" /> <span>{book.city}</span></div>
+                  <div className="flex items-center gap-3"><Tag className="h-5 w-5 text-primary" /> <span>{book.category}</span></div>
+                  <div className="flex items-center gap-3"><Calendar className="h-5 w-5 text-primary" /> <span>E'lon qo'yildi: {format(new Date(book.createdAt), "d MMMM, yyyy", {locale: uz})}</span></div>
+              </div>
 
-            <div>
-            <h3 className="text-lg font-semibold mb-2 flex items-center gap-2"><BookOpen className="h-5 w-5" /> Batafsil ma'lumot</h3>
-            <p className="text-foreground/90 leading-relaxed text-sm md:text-base">{book.description}</p>
-            </div>
+              <div>
+              <h3 className="text-lg font-semibold mb-2 flex items-center gap-2"><BookOpen className="h-5 w-5" /> Batafsil ma'lumot</h3>
+              <p className="text-foreground/90 leading-relaxed text-sm md:text-base break-words">{book.description}</p>
+              </div>
 
-            <div className="mt-auto pt-6">
-            <Dialog>
-                <DialogTrigger asChild>
-                <Button size="lg" className="w-full text-base md:text-lg transition-transform hover:scale-105">
-                    <Phone className="mr-2 h-5 w-5" />
-                    Sotuvchi bilan bog'lanish
-                </Button>
-                </DialogTrigger>
-                <DialogContent>
-                <DialogHeader>
-                    <DialogTitle className="text-2xl">Sotuvchi ma'lumotlari</DialogTitle>
-                    <DialogDescription>
-                    Kitobni sotib olish uchun sotuvchi bilan bog'laning.
-                    </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                    <div className="flex items-center gap-4">
-                        <User className="h-5 w-5 text-muted-foreground" />
-                        <span>{book.sellerContact?.name}</span>
-                    </div>
-                    <div className="flex items-center gap-4">
-                        <Phone className="h-5 w-5 text-muted-foreground" />
-                        <a href={`tel:${book.sellerContact?.phone}`} className="text-primary hover:underline">{book.sellerContact?.phone}</a>
-                    </div>
-                </div>
-                </DialogContent>
-            </Dialog>
-            </div>
-        </div>
+              <div className="mt-auto pt-6">
+              <Dialog>
+                  <DialogTrigger asChild>
+                  <Button size="lg" className="w-full text-base md:text-lg transition-transform hover:scale-105">
+                      <Phone className="mr-2 h-5 w-5" />
+                      Sotuvchi bilan bog'lanish
+                  </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                  <DialogHeader>
+                      <DialogTitle className="text-2xl">Sotuvchi ma'lumotlari</DialogTitle>
+                      <DialogDescription>
+                      Kitobni sotib olish uchun sotuvchi bilan bog'laning.
+                      </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
+                      <div className="flex items-center gap-4">
+                          <User className="h-5 w-5 text-muted-foreground" />
+                          <span>{book.sellerContact?.name}</span>
+                      </div>
+                      <div className="flex items-center gap-4">
+                          <Phone className="h-5 w-5 text-muted-foreground" />
+                          <a href={`tel:${book.sellerContact?.phone}`} className="text-primary hover:underline">{book.sellerContact?.phone}</a>
+                      </div>
+                  </div>
+                  </DialogContent>
+              </Dialog>
+              </div>
+          </div>
         </div>
     </div>
   );
