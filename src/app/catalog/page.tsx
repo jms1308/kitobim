@@ -33,53 +33,32 @@ export default function CatalogPage() {
   const [cities, setCities] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Filter states are initialized from URL search params to preserve state on navigation
+  // Filter states initialized from URL search params
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
   const [selectedCity, setSelectedCity] = useState(searchParams.get('city') || 'all');
-  const [priceRange, setPriceRange] = useState<[number, number]>(() => {
-    const min = searchParams.get('min_price');
-    const max = searchParams.get('max_price');
-    // Set a reasonable default max price if not present
-    return [min ? parseInt(min, 10) : 0, max ? parseInt(max, 10) : 500000];
-  });
+  const [priceRange, setPriceRange] = useState<[number, number]>([
+    parseInt(searchParams.get('min_price') || '0', 10),
+    parseInt(searchParams.get('max_price') || '500000', 10)
+  ]);
   
   const [maxPrice, setMaxPrice] = useState(500000);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
-  // This function creates a query string from the current filter states
-  const createQueryString = useCallback(
-    (params: Record<string, string | number | undefined>) => {
-      const newSearchParams = new URLSearchParams(searchParams.toString());
-      for (const [key, value] of Object.entries(params)) {
-        if (value === undefined || value === '' || (key !== 'q' && value === 'all') || (key === 'min_price' && value === 0) || (key === 'max_price' && value === maxPrice)) {
-          newSearchParams.delete(key);
-        } else {
-          newSearchParams.set(key, String(value));
-        }
-      }
-      return newSearchParams.toString();
-    },
-    [searchParams, maxPrice]
-  );
-  
-  // This effect synchronizes the filter state with the URL
+  // Update URL query string when filters change
   useEffect(() => {
-    const params = {
-      q: searchQuery || undefined,
-      category: selectedCategory === 'all' ? undefined : selectedCategory,
-      city: selectedCity === 'all' ? undefined : selectedCity,
-      min_price: priceRange[0] === 0 ? undefined : priceRange[0],
-      max_price: priceRange[1] === maxPrice ? undefined : priceRange[1],
-    };
+    const params = new URLSearchParams(searchParams);
+    if (searchQuery) params.set('q', searchQuery); else params.delete('q');
+    if (selectedCategory !== 'all') params.set('category', selectedCategory); else params.delete('category');
+    if (selectedCity !== 'all') params.set('city', selectedCity); else params.delete('city');
+    if (priceRange[0] > 0) params.set('min_price', String(priceRange[0])); else params.delete('min_price');
+    if (priceRange[1] < maxPrice) params.set('max_price', String(priceRange[1])); else params.delete('max_price');
     
-    const queryString = createQueryString(params);
-    // We use router.replace to avoid polluting browser history with every filter change
-    router.replace(`${pathname}?${queryString}`, { scroll: false });
-  }, [searchQuery, selectedCategory, selectedCity, priceRange, pathname, router, createQueryString, maxPrice]);
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  }, [searchQuery, selectedCategory, selectedCity, priceRange, pathname, router, maxPrice, searchParams]);
 
 
-  // This effect fetches all necessary data on component mount
+  // Fetch all necessary data on component mount
   useEffect(() => {
     const fetchData = async () => {
         setIsLoading(true);
@@ -95,9 +74,9 @@ export default function CatalogPage() {
             setCities(['Barcha shaharlar', ...citiesData]);
 
             if (booksData.length > 0) {
-                const maxBookPrice = Math.max(...booksData.map(b => b.price));
-                const newMaxPrice = Math.ceil(maxBookPrice / 100000) * 100000;
-                setMaxPrice(newMaxPrice > 0 ? newMaxPrice : 500000);
+                const maxBookPrice = Math.max(...booksData.map(b => b.price), 0);
+                const newMaxPrice = Math.ceil((maxBookPrice || 500000) / 100000) * 100000;
+                setMaxPrice(newMaxPrice);
 
                 const maxParam = searchParams.get('max_price');
                 if (!maxParam) {
@@ -109,25 +88,30 @@ export default function CatalogPage() {
         } finally {
             setIsLoading(false);
         }
-    }
+    };
     fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Intentionally empty to run only once on mount
+  }, []);
 
-  // Memoized filtered books list that recalculates when filters or data change
   const filteredBooks = useMemo(() => {
+    const minPrice = parseInt(searchParams.get('min_price') || '0', 10);
+    const maxPriceValue = parseInt(searchParams.get('max_price') || `${maxPrice}`, 10);
+    const category = searchParams.get('category');
+    const city = searchParams.get('city');
+    const query = searchParams.get('q')?.toLowerCase();
+
     return allBooks.filter(book => {
-      const searchMatch = searchQuery === '' || 
-        book.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-        book.author.toLowerCase().includes(searchQuery.toLowerCase());
+      const searchMatch = !query ||
+        book.title.toLowerCase().includes(query) || 
+        book.author.toLowerCase().includes(query);
       
-      const categoryMatch = selectedCategory === 'all' || book.category === selectedCategory;
-      const cityMatch = selectedCity === 'all' || book.city === selectedCity;
-      const priceMatch = book.price >= priceRange[0] && book.price <= priceRange[1];
+      const categoryMatch = !category || book.category === category;
+      const cityMatch = !city || book.city === city;
+      const priceMatch = book.price >= minPrice && book.price <= maxPriceValue;
 
       return searchMatch && categoryMatch && cityMatch && priceMatch;
     });
-  }, [allBooks, searchQuery, selectedCategory, selectedCity, priceRange]);
+  }, [allBooks, searchParams, maxPrice]);
   
 
   const handleResetFilters = () => {
@@ -200,7 +184,6 @@ export default function CatalogPage() {
     <div className="flex flex-col md:flex-row gap-8">
       <aside className="w-full md:w-1/4 lg:w-1/5">
         <div className="sticky top-20 space-y-6">
-          {/* Mobile Filter */}
           <Collapsible open={isFilterOpen} onOpenChange={setIsFilterOpen} className="md:hidden">
              <div className="flex justify-between items-center p-4 border rounded-lg bg-card shadow-sm">
                 <CollapsibleTrigger asChild>
@@ -222,10 +205,9 @@ export default function CatalogPage() {
                 <div className="p-4 mt-2 border rounded-lg md:p-0 md:mt-0 md:border-none space-y-4">
                     <FilterControls />
                 </div>
-             CollapsibleContent>
+             </CollapsibleContent>
           </Collapsible>
           
-           {/* Desktop Filter */}
            <div className="hidden md:block space-y-6">
              <h3 className="text-xl font-bold">Filtrlar</h3>
              <FilterControls />
@@ -243,7 +225,6 @@ export default function CatalogPage() {
                           <Badge variant="secondary" className="flex items-center gap-1">
                               {selectedCategory}
                               <button onClick={() => setSelectedCategory('all')}><X className="h-3 w-3" /></button>
-
                           </Badge>
                       )}
                       {selectedCity !== 'all' && (
@@ -271,7 +252,7 @@ export default function CatalogPage() {
         <h1 className="text-3xl font-bold font-headline mb-6">Barcha e'lonlar</h1>
         {isLoading ? (
              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {Array.from({length: 12}).map((_, i) => <Skeleton key={i} className="h-96 w-full" />}
+                {Array.from({length: 12}).map((_, i) => <Skeleton key={i} className="h-96 w-full" />)}
             </div>
         ) : (
           <>
@@ -292,5 +273,3 @@ export default function CatalogPage() {
     </div>
   );
 }
-
-    
