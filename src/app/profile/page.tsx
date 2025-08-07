@@ -38,9 +38,6 @@ function ProfilePageContent() {
                 <div className="flex items-center gap-2">
                     <Phone className="h-4 w-4" /> {user.phone}
                 </div>
-                <div className="flex items-center gap-2">
-                     <Mail className="h-4 w-4" /> {user.email}
-                </div>
             </div>
           </div>
         </CardHeader>

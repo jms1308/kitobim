@@ -25,7 +25,6 @@ import { Loader2 } from 'lucide-react';
 const formSchema = z.object({
   username: z.string().min(3, { message: "Foydalanuvchi nomi kamida 3 belgidan iborat bo'lishi kerak." }),
   phone: z.string().min(9, { message: "Telefon raqamini to'g'ri kiriting (+998...)." }),
-  email: z.string().email({ message: "To'g'ri email manzil kiriting." }),
   password: z.string().min(6, { message: "Parol kamida 6 belgidan iborat bo'lishi kerak." }),
 });
 
@@ -40,20 +39,19 @@ export default function SignupPage() {
     defaultValues: {
       username: '',
       phone: '',
-      email: '',
       password: '',
     },
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
-    const { success, error } = await signup(values.username, values.phone, values.email, values.password);
+    const { success, error } = await signup(values.username, values.phone, values.password);
     if (success) {
       toast({
         title: "Muvaffaqiyatli!",
-        description: "Hisobingiz yaratildi. Endi tizimga kirishingiz mumkin.",
+        description: "Hisobingiz yaratildi va tizimga kirdingiz.",
       });
-      router.push('/login');
+      router.push('/profile');
     } else {
         toast({
           variant: "destructive",
@@ -79,7 +77,7 @@ export default function SignupPage() {
                 name="username"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Foydalanuvchi nomi</FormLabel>
+                    <FormLabel>Foydalanuvchi nomi (Ism)</FormLabel>
                     <FormControl>
                       <Input placeholder="kitobxon" {...field} />
                     </FormControl>
@@ -95,19 +93,6 @@ export default function SignupPage() {
                     <FormLabel>Telefon raqami</FormLabel>
                     <FormControl>
                       <Input placeholder="+998901234567" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input type="email" placeholder="siz@email.com" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

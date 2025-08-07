@@ -12,7 +12,7 @@ export interface Book {
   city: string;
   imageUrl: string;
   createdAt: string;
-  sellerId: string;
+  sellerId: string; // This will now be the user's ID from our custom table
   sellerContact?: {
     name: string;
     phone: string;
@@ -23,7 +23,6 @@ export interface User {
   id: string;
   username: string;
   phone: string;
-  email: string;
   createdAt: string;
   postsCount: number;
 }
