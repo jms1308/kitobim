@@ -272,7 +272,7 @@ export default function CatalogPage() {
         </div>
       </aside>
       <main className="w-full md:w-3/4 lg:w-4/5">
-        <h1 className="text-3xl font-bold font-headline mb-6">Barcha kitoblar</h1>
+        <h1 className="text-3xl font-bold font-headline mb-6">So'nggi kitoblar</h1>
         {isLoading ? (
              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {Array.from({length: 12}).map((_, i) => <Skeleton key={i} className="h-96 w-full" />)}
