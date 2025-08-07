@@ -20,7 +20,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   loading: boolean;
   login: (email: string, pass: string) => Promise<boolean>;
-  signup: (username: string, email: string, pass: string) => Promise<boolean>;
+  signup: (username: string, email: string, pass: string) => Promise<{ success: boolean; errorCode?: string }>;
   logout: () => void;
 }
 
@@ -58,7 +58,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const signup = async (username: string, email: string, pass: string): Promise<boolean> => {
+  const signup = async (username: string, email: string, pass: string): Promise<{ success: boolean; errorCode?: string }> => {
     setLoading(true);
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
@@ -76,11 +76,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       // The onAuthStateChanged listener will handle setting the user state.
-      return true;
-    } catch (error) {
+      return { success: true };
+    } catch (error: any) {
       console.error("Signup error:", error);
       setLoading(false);
-      return false;
+      return { success: false, errorCode: error.code };
     }
   };
 

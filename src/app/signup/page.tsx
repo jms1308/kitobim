@@ -44,7 +44,7 @@ export default function SignupPage() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
-    const success = await signup(values.username, values.email, values.password);
+    const { success, errorCode } = await signup(values.username, values.email, values.password);
     if (success) {
       toast({
         title: "Muvaffaqiyatli!",
@@ -52,11 +52,19 @@ export default function SignupPage() {
       });
       router.push('/login');
     } else {
-      toast({
-        variant: "destructive",
-        title: "Xatolik!",
-        description: "Ro'yxatdan o'tishda xatolik yuz berdi. Iltimos, qayta urinib ko'ring.",
-      });
+      if (errorCode === 'auth/email-already-in-use') {
+        toast({
+          variant: "destructive",
+          title: "Xatolik!",
+          description: "Bu email manzili allaqachon ro'yxatdan o'tgan.",
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Xatolik!",
+          description: "Ro'yxatdan o'tishda xatolik yuz berdi. Iltimos, qayta urinib ko'ring.",
+        });
+      }
     }
     setIsLoading(false);
   }
