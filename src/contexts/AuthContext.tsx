@@ -58,20 +58,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   
   const signIn = async (phone: string, password: string) => {
       setLoading(true);
-      
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('phone', phone)
-        .single();
-        
-      if (profileError || !profile) {
-          setLoading(false);
-          return { success: false, error: "Telefon raqam yoki parol xato." };
-      }
+
+      const dummyEmail = `${phone}@book-bozori.com`;
       
       const { error } = await supabase.auth.signInWithPassword({
-        email: profile.email as string,
+        email: dummyEmail,
         password: password,
       });
 
@@ -86,6 +77,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signup = async (username: string, phone: string, password: string) => {
     setLoading(true);
     
+    // 1. Check if phone number already exists in profiles table
     const { data: existingProfile, error: profileError } = await supabase
         .from('profiles')
         .select('phone')
@@ -102,16 +94,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { success: false, error: "Bu telefon raqami allaqachon ro'yxatdan o'tgan." };
     }
 
+    // 2. Create a dummy email for Supabase Auth
     const dummyEmail = `${phone}@book-bozori.com`;
 
+    // 3. Sign up the user in Supabase Auth
     const { data, error } = await supabase.auth.signUp({
         email: dummyEmail,
         password: password,
         options: {
+            // Pass username and phone to the trigger via metadata
             data: {
                 username: username,
                 phone: phone,
-                email: dummyEmail
             }
         }
     });
@@ -125,6 +119,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { success: false, error: error.message };
     }
     
+    if (!data.user) {
+        return { success: false, error: "Foydalanuvchi yaratilmadi, iltimos qayta urinib ko'ring." };
+    }
+
     return { success: true };
   };
 
