@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import type { User as AppUser } from '@/lib/types';
+import type { AppUser } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 import { auth, db } from '@/lib/firebase';
 import { 
@@ -51,7 +51,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const userCredential = await signInWithEmailAndPassword(auth, email, pass);
       const appUser = await getUserById(userCredential.user.uid);
       setUser(appUser);
-      // Let onAuthStateChanged handle loading state for consistency
       return true;
     } catch (error) {
       console.error("Login error:", error);
