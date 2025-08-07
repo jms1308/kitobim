@@ -101,13 +101,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // 2. Sign up the user in Supabase Auth
     const { data, error } = await supabase.auth.signUp({
-        email: email,
-        password: password,
+        email: email, // Correct position for email
+        password: password, // Correct position for password
         options: {
             data: {
                 username: username,
                 phone: phone,
-                email: email
+                email: email, // Also pass here for the trigger
             }
         }
     });
