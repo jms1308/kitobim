@@ -10,6 +10,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
+    // Redirect only when loading is complete and user is not authenticated.
     if (!loading && !isAuthenticated) {
       router.push('/login');
     }
@@ -26,8 +27,11 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
+  // If authenticated, render the children.
+  // If not authenticated, the useEffect will handle redirection,
+  // so we can render null or a loader to avoid flashing content.
   if (!isAuthenticated) {
-    return null; // Or a login prompt, but redirection is handled in useEffect
+    return null;
   }
 
   return <>{children}</>;
