@@ -82,16 +82,18 @@ export default function CatalogPage() {
     <div className="flex flex-col md:flex-row gap-8">
       <aside className="w-full md:w-1/4 lg:w-1/5">
         <div className="sticky top-20 space-y-6">
-          <Collapsible open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+          <Collapsible open={isFilterOpen} onOpenChange={setIsFilterOpen} className="md:block">
              <div className="flex justify-between items-center p-4 border rounded-lg bg-card md:p-0 md:border-none md:bg-transparent">
-                <CollapsibleTrigger className="w-full text-left">
-                    <h3 className="text-xl font-bold flex items-center gap-2">
-                        <FilterIcon className="h-5 w-5 md:hidden" />
-                        Filtrlar
-                        {activeFiltersCount > 0 && (
-                            <Badge variant="secondary" className="ml-2 md:hidden">{activeFiltersCount}</Badge>
-                        )}
-                    </h3>
+                <CollapsibleTrigger asChild>
+                  <div className="w-full text-left">
+                      <h3 className="text-xl font-bold flex items-center gap-2">
+                          <FilterIcon className="h-5 w-5 md:hidden" />
+                          Filtrlar
+                          {activeFiltersCount > 0 && (
+                              <Badge variant="secondary" className="ml-2 md:hidden">{activeFiltersCount}</Badge>
+                          )}
+                      </h3>
+                  </div>
                 </CollapsibleTrigger>
                 <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setIsFilterOpen(prev => !prev)}>
                     <ChevronDown className={`h-5 w-5 transition-transform ${isFilterOpen ? 'rotate-180' : ''}`} />
@@ -164,6 +166,7 @@ export default function CatalogPage() {
                         <Badge variant="secondary" className="flex items-center gap-1">
                             {selectedCategory}
                             <button onClick={() => setSelectedCategory('all')}><X className="h-3 w-3" /></button>
+
                         </Badge>
                     )}
                     {selectedCity !== 'all' && (
