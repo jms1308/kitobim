@@ -14,38 +14,46 @@ const normalizePhone = (phone: string) => {
 
 // --- User Functions (No Auth) ---
 
-export const createUser = async (username: string, phone: string, password: string): Promise<{ success: boolean; error?: string }> => {
+export const createUser = async (username: string, phone: string, password: string): Promise<{ data?: User | null, success: boolean; error?: string }> => {
     const normalizedPhone = normalizePhone(phone);
     if (normalizedPhone.length !== 9) {
         return { success: false, error: "Telefon raqami noto'g'ri formatda." };
     }
 
     // Check if phone number already exists by comparing the last 9 digits
-    const { data: existingUser, error: selectError } = await supabase
+    const { data: existingUsers, error: selectError } = await supabase
         .from('users')
-        .select('phone')
-        .like('phone', `%${normalizedPhone}`);
+        .select('phone');
 
     if (selectError) {
         console.error('Error checking for existing user:', selectError);
         return { success: false, error: "Foydalanuvchini tekshirishda xatolik." };
     }
-
-    if (existingUser && existingUser.length > 0) {
-        return { success: false, error: "Bu telefon raqami allaqachon ro'yxatdan o'tgan." };
+    
+    if (existingUsers && existingUsers.some(u => normalizePhone(u.phone) === normalizedPhone)) {
+         return { success: false, error: "Bu telefon raqami allaqachon ro'yxatdan o'tgan." };
     }
 
+
     // Create new user with the normalized phone number
-    const { error: insertError } = await supabase
+    const { data: newUser, error: insertError } = await supabase
         .from('users')
-        .insert({ username, phone: normalizedPhone, password });
+        .insert({ username, phone: normalizedPhone, password })
+        .select('id, username, phone, createdAt')
+        .single();
+
 
     if (insertError) {
         console.error('Error creating user:', insertError);
         return { success: false, error: "Foydalanuvchi yaratishda xatolik yuz berdi." };
     }
+    
+    if (newUser) {
+        const postsCount = await getPostsCountForUser(newUser.id);
+        return { data: { ...newUser, postsCount }, success: true };
+    }
 
-    return { success: true };
+    return { success: false, error: "Foydalanuvchi yaratib bo'lmadi." };
 };
 
 export const loginUser = async (phone: string, password: string): Promise<User | null> => {
@@ -246,3 +254,4 @@ export const getCities = async (): Promise<string[]> => {
     const cities = new Set(data.map(doc => doc.city as string));
     return Array.from(cities);
 }
+
