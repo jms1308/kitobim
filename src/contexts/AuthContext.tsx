@@ -55,13 +55,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email, pass);
-      // onAuthStateChanged will handle the rest
+      // onAuthStateChanged will handle setting the user and loading state
       return true;
     } catch (error) {
       console.error("Login error:", error);
       setUser(null);
-      setLoading(false);
       return false;
+    } finally {
+        // Even if onAuthStateChanged is slow, this ensures loading stops
+        setLoading(false);
     }
   };
 
@@ -81,13 +83,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           ...newUser,
           createdAt: serverTimestamp()
       });
-      // After signup, Firebase automatically signs in the user,
-      // so onAuthStateChanged will trigger and set loading to false.
+      
+      // Manually set the new user in the context
+      const createdUser = await getUserById(firebaseUser.uid);
+      if (createdUser) {
+        setUser(createdUser);
+      }
+      
       return { success: true };
     } catch (error: any) {
       console.error("Signup error:", error);
-      setLoading(false);
       return { success: false, errorCode: error.code };
+    } finally {
+      setLoading(false);
     }
   };
 

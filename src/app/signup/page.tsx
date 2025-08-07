@@ -48,9 +48,9 @@ export default function SignupPage() {
     if (success) {
       toast({
         title: "Muvaffaqiyatli!",
-        description: "Hisobingiz yaratildi. Endi tizimga kirishingiz mumkin.",
+        description: "Hisobingiz yaratildi va tizimga kirdingiz.",
       });
-      router.push('/login');
+      router.push('/profile'); // Redirect to profile page on successful signup
     } else {
       if (errorCode === 'auth/email-already-in-use') {
         toast({
