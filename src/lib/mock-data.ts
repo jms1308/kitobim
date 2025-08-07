@@ -1,5 +1,4 @@
 import type { Book, User } from './types';
-import { Timestamp } from 'firebase/firestore';
 
 // Note: This data is now only for reference and seeding, not used directly by the app.
 // The app connects to Firebase.
@@ -10,7 +9,8 @@ export const mockUsers: (User & { passwordHash: string })[] = [
     username: 'Kitobxon',
     email: 'kitobxon@example.com',
     passwordHash: 'hashed_password_123',
-    createdAt: Timestamp.fromDate(new Date()),
+    createdAt: new Date(),
+    postsCount: 0,
   },
 ];
 
@@ -25,7 +25,7 @@ export const mockBooks: Book[] = [
     category: 'Badiiy adabiyot',
     city: 'Toshkent',
     imageUrl: 'https://placehold.co/600x800.png',
-    createdAt: Timestamp.fromDate(new Date('2024-05-19T10:00:00Z')),
+    createdAt: new Date('2024-05-19T10:00:00Z'),
     sellerId: 'user-1',
     sellerContact: { name: 'Alisher', phone: '+998901234567' }
   },
@@ -39,7 +39,7 @@ export const mockBooks: Book[] = [
     category: 'Tarixiy roman',
     city: 'Samarqand',
     imageUrl: 'https://placehold.co/600x800.png',
-    createdAt: Timestamp.fromDate(new Date('2024-05-20T12:30:00Z')),
+    createdAt: new Date('2024-05-20T12:30:00Z'),
     sellerId: 'user-2',
     sellerContact: { name: 'Nodira', phone: '+998912345678' }
   },
@@ -53,7 +53,7 @@ export const mockBooks: Book[] = [
     category: 'Tarixiy roman',
     city: 'Buxoro',
     imageUrl: 'https://placehold.co/600x800.png',
-    createdAt: Timestamp.fromDate(new Date('2024-05-18T09:00:00Z')),
+    createdAt: new Date('2024-05-18T09:00:00Z'),
     sellerId: 'user-1',
     sellerContact: { name: 'Alisher', phone: '+998901234567' }
   },
@@ -67,7 +67,7 @@ export const mockBooks: Book[] = [
     category: 'Bolalar adabiyoti',
     city: 'Farg\'ona',
     imageUrl: 'https://placehold.co/600x800.png',
-    createdAt: Timestamp.fromDate(new Date('2024-05-21T15:00:00Z')),
+    createdAt: new Date('2024-05-21T15:00:00Z'),
     sellerId: 'user-3',
     sellerContact: { name: 'Sanjar', phone: '+998934567890' }
   },
@@ -81,7 +81,7 @@ export const mockBooks: Book[] = [
     category: 'Bolalar adabiyoti',
     city: 'Andijon',
     imageUrl: 'https://placehold.co/600x800.png',
-    createdAt: Timestamp.fromDate(new Date('2024-05-22T11:00:00Z')),
+    createdAt: new Date('2024-05-22T11:00:00Z'),
     sellerId: 'user-2',
     sellerContact: { name: 'Nodira', phone: '+998912345678' }
   },
@@ -95,7 +95,7 @@ export const mockBooks: Book[] = [
     category: 'Badiiy adabiyot',
     city: 'Toshkent',
     imageUrl: 'https://placehold.co/600x800.png',
-    createdAt: Timestamp.fromDate(new Date('2024-05-21T18:00:00Z')),
+    createdAt: new Date('2024-05-21T18:00:00Z'),
     sellerId: 'user-1',
     sellerContact: { name: 'Alisher', phone: '+998901234567' }
   },
@@ -109,7 +109,7 @@ export const mockBooks: Book[] = [
     category: 'Badiiy adabiyot',
     city: 'Qo\'qon',
     imageUrl: 'https://placehold.co/600x800.png',
-    createdAt: Timestamp.fromDate(new Date('2024-05-22T14:20:00Z')),
+    createdAt: new Date('2024-05-22T14:20:00Z'),
     sellerId: 'user-4',
     sellerContact: { name: 'Madina', phone: '+998945678901' }
   },
@@ -123,7 +123,7 @@ export const mockBooks: Book[] = [
     category: 'Hikoyalar',
     city: 'Namangan',
     imageUrl: 'https://placehold.co/600x800.png',
-    createdAt: Timestamp.fromDate(new Date('2024-05-23T08:45:00Z')),
+    createdAt: new Date('2024-05-23T08:45:00Z'),
     sellerId: 'user-3',
     sellerContact: { name: 'Sanjar', phone: '+998934567890' }
   }

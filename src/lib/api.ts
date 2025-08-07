@@ -1,15 +1,13 @@
 import type { Book, User } from './types';
 import { mockBooks, mockUsers } from './mock-data';
-import { Timestamp } from 'firebase/firestore';
-
 
 // Simulating API delay
-const API_DELAY = 500;
+const API_DELAY = 0;
 const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
 const convertBookTimestamps = (book: Book): Book => {
-    if (book.createdAt instanceof Timestamp) {
-        return { ...book, createdAt: book.createdAt.toDate().toISOString() };
+    if (book.createdAt instanceof Date) {
+        return { ...book, createdAt: book.createdAt.toISOString() };
     }
      if (typeof book.createdAt !== 'string') {
         // Fallback for any other type
@@ -73,7 +71,7 @@ export const addBook = async (bookData: Omit<Book, 'id' | 'createdAt' | 'sellerC
   const newBook: Book = {
     ...bookData,
     id: `book-${Date.now()}`,
-    createdAt: new Date().toISOString(),
+    createdAt: new Date(),
   };
   mockBooks.unshift(newBook);
   return convertBookTimestamps(newBook);
@@ -109,10 +107,10 @@ export const getUserById = async (id: string): Promise<User | null> => {
         const { passwordHash, ...userWithoutPassword } = user;
         
         let createdAtString: string;
-        if (user.createdAt instanceof Timestamp) {
-            createdAtString = user.createdAt.toDate().toISOString();
-        } else if (user.createdAt instanceof Date) {
+        if (user.createdAt instanceof Date) {
             createdAtString = user.createdAt.toISOString();
+        } else if (typeof user.createdAt === 'string') {
+            createdAtString = user.createdAt;
         }
         else {
             createdAtString = new Date().toISOString();
