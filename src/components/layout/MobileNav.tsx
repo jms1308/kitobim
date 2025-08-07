@@ -40,7 +40,7 @@ export default function MobileNav() {
               key={link.href}
               href={link.href}
               className={cn(
-                "flex flex-col items-center justify-center gap-1 text-xs font-medium transition-colors w-16",
+                "flex flex-1 flex-col items-center justify-center gap-1 text-xs font-medium transition-colors text-center whitespace-nowrap",
                 isActive ? "text-primary" : "text-muted-foreground hover:text-primary"
               )}
             >
