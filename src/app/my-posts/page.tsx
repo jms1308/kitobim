@@ -30,23 +30,19 @@ function MyPostsPageContent() {
   const { toast } = useToast();
 
   useEffect(() => {
-    const fetchUserBooks = async () => {
-      if (user) {
-        setLoading(true);
-        const userBooks = await getBooks({ userId: user.id });
-        setBooks(userBooks);
-        setLoading(false);
-      } else {
-        // If user is not logged in, we shouldn't be here, but as a fallback, stop loading.
-        setLoading(false);
-      }
-    };
-    fetchUserBooks();
+    if (user) {
+      setLoading(true);
+      const userBooks = getBooks({ userId: user.id });
+      setBooks(userBooks);
+      setLoading(false);
+    } else {
+      setLoading(false);
+    }
   }, [user]);
 
   const handleDelete = async (bookId: string) => {
     if (!user) return;
-    const result = await deleteBook(bookId, user.id);
+    const result = deleteBook(bookId, user.id);
     if (result.success) {
       setBooks(books.filter(book => book.id !== bookId));
       toast({

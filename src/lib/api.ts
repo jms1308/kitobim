@@ -13,7 +13,7 @@ const convertBookTimestamps = (book: Book): Book => {
 };
 
 
-export const getBooks = async ({
+export const getBooks = ({
   category,
   city,
   minPrice,
@@ -25,7 +25,7 @@ export const getBooks = async ({
   minPrice?: number;
   maxPrice?: number;
   userId?: string;
-}): Promise<Book[]> => {
+}): Book[] => {
   let books = mockBooks;
 
   if (category && category !== 'all') {
@@ -47,7 +47,7 @@ export const getBooks = async ({
   return books.map(convertBookTimestamps);
 };
 
-export const getBookById = async (id: string): Promise<Book | undefined> => {
+export const getBookById = (id: string): Book | undefined => {
   const book = mockBooks.find(b => b.id === id);
   if (book) {
      const seller = mockUsers.find(u => u.id === book.sellerId);
@@ -59,7 +59,7 @@ export const getBookById = async (id: string): Promise<Book | undefined> => {
   return undefined;
 };
 
-export const addBook = async (bookData: Omit<Book, 'id' | 'createdAt' | 'sellerContact'>): Promise<Book> => {
+export const addBook = (bookData: Omit<Book, 'id' | 'createdAt' | 'sellerContact'>): Book => {
   const newBook: Book = {
     ...bookData,
     id: `book-${Date.now()}`,
@@ -69,7 +69,7 @@ export const addBook = async (bookData: Omit<Book, 'id' | 'createdAt' | 'sellerC
   return convertBookTimestamps(newBook);
 };
 
-export const deleteBook = async (id: string, userId: string): Promise<{ success: boolean }> => {
+export const deleteBook = (id: string, userId: string): { success: boolean } => {
   const bookIndex = mockBooks.findIndex(b => b.id === id && b.sellerId === userId);
   if (bookIndex > -1) {
     mockBooks.splice(bookIndex, 1);
@@ -78,17 +78,17 @@ export const deleteBook = async (id: string, userId: string): Promise<{ success:
   return { success: false };
 };
 
-export const getCategories = async (): Promise<string[]> => {
+export const getCategories = (): string[] => {
     const categories = new Set(mockBooks.map(doc => doc.category as string));
     return Array.from(categories);
 }
 
-export const getCities = async (): Promise<string[]> => {
+export const getCities = (): string[] => {
     const cities = new Set(mockBooks.map(doc => doc.city as string));
     return Array.from(cities);
 }
 
-export const getUserById = async (id: string): Promise<User | null> => {
+export const getUserById = (id: string): User | null => {
     const user = mockUsers.find(u => u.id === id);
     if(user) {
         const postsCount = mockBooks.filter(b => b.sellerId === id).length;

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Search } from 'lucide-react';
@@ -10,19 +10,8 @@ import type { Book } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function HomePage() {
-  const [books, setBooks] = useState<Book[]>([]);
-  const [loading, setLoading] = useState(true);
+  const allBooks = getBooks({});
   const [searchQuery, setSearchQuery] = useState('');
-
-  useEffect(() => {
-    const fetchBooks = async () => {
-      setLoading(true);
-      const allBooks = await getBooks({});
-      setBooks(allBooks);
-      setLoading(false);
-    };
-    fetchBooks();
-  }, []);
 
   const filteredBooks = useMemo(() => {
     const getBookDate = (book: Book) => {
@@ -31,7 +20,7 @@ export default function HomePage() {
         }
         return book.createdAt;
     }
-    const recentBooks = [...books].sort((a, b) => getBookDate(b).getTime() - getBookDate(a).getTime());
+    const recentBooks = [...allBooks].sort((a, b) => getBookDate(b).getTime() - getBookDate(a).getTime());
     
     if (!searchQuery) {
       return recentBooks.slice(0, 8);
@@ -41,7 +30,7 @@ export default function HomePage() {
         book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         book.author.toLowerCase().includes(searchQuery.toLowerCase())
     ).slice(0, 8);
-  }, [books, searchQuery]);
+  }, [allBooks, searchQuery]);
 
   return (
     <div className="space-y-12">
@@ -70,15 +59,7 @@ export default function HomePage() {
       <section>
         <h2 className="text-3xl font-bold font-headline mb-6">So'nggi E'lonlar</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {loading
-            ? Array.from({ length: 8 }).map((_, index) => (
-                <div key={index} className="space-y-2">
-                  <Skeleton className="h-64 w-full" />
-                  <Skeleton className="h-6 w-3/4" />
-                  <Skeleton className="h-4 w-1/2" />
-                </div>
-              ))
-            : filteredBooks.map((book) => <BookCard key={book.id} book={book} />)}
+          {filteredBooks.map((book) => <BookCard key={book.id} book={book} />)}
         </div>
       </section>
     </div>

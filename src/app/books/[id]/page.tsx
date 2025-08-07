@@ -24,15 +24,12 @@ export default function BookDetailsPage({ params }: { params: { id: string } }) 
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchBook = async () => {
-      setLoading(true);
-      const data = await getBookById(params.id);
-      if(data) {
-        setBook(data);
-      }
-      setLoading(false);
-    };
-    fetchBook();
+    setLoading(true);
+    const data = getBookById(params.id);
+    if(data) {
+      setBook(data);
+    }
+    setLoading(false);
   }, [params.id]);
 
   if (loading) {
