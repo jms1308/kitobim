@@ -70,20 +70,22 @@ export const getBookById = async (id: string): Promise<Book | undefined> => {
   
   let bookData = { ...bookSnap.data(), id: bookSnap.id } as Book;
 
-  const sellerDocRef = doc(db, 'users', bookData.sellerId);
-  const sellerSnap = await getDoc(sellerDocRef);
+  if (bookData.sellerId) {
+    const sellerDocRef = doc(db, 'users', bookData.sellerId);
+    const sellerSnap = await getDoc(sellerDocRef);
 
-  if (sellerSnap.exists()) {
-     const sellerData = sellerSnap.data() as User;
-     bookData.sellerContact = {
-         name: sellerData.username,
-         phone: '+998 XX XXX XX XX' // Keep phone number private
-     };
-  } else {
-     bookData.sellerContact = {
-         name: 'Noma\'lum',
-         phone: '+998 XX XXX XX XX'
-     };
+    if (sellerSnap.exists()) {
+       const sellerData = sellerSnap.data() as User;
+       bookData.sellerContact = {
+           name: sellerData.username,
+           phone: '+998 XX XXX XX XX' // Keep phone number private
+       };
+    } else {
+       bookData.sellerContact = {
+           name: 'Noma\'lum',
+           phone: '+998 XX XXX XX XX'
+       };
+    }
   }
   
   return convertBookTimestamps(bookData);
@@ -135,11 +137,12 @@ export const getUserById = async (id: string): Promise<User | null> => {
     const userSnap = await getDoc(userDocRef);
     if (userSnap.exists()) {
         const userData = userSnap.data();
+        const createdAt = userData.createdAt as Timestamp | null;
         return {
             id: userSnap.id,
             username: userData.username,
             email: userData.email,
-            createdAt: (userData.createdAt as Timestamp).toDate().toISOString()
+            createdAt: createdAt ? createdAt.toDate().toISOString() : new Date().toISOString()
         };
     }
     return null;

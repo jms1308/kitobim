@@ -14,7 +14,7 @@ export interface Book {
   imageUrl: string;
   createdAt: string | Timestamp;
   sellerId: string;
-  sellerContact: {
+  sellerContact?: {
     name: string;
     phone: string;
   };
