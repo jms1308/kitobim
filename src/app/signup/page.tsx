@@ -23,9 +23,7 @@ import { Loader2 } from 'lucide-react';
 
 const formSchema = z.object({
   username: z.string().min(3, { message: "Foydalanuvchi nomi kamida 3 belgidan iborat bo'lishi kerak." }),
-  email: z.string().email({ message: "To'g'ri email manzil kiriting." }),
-  phone: z.string().min(9, { message: "Telefon raqamini to'g'ri kiriting." }).optional().or(z.literal('')),
-  password: z.string().min(6, { message: "Parol kamida 6 belgidan iborat bo'lishi kerak." }),
+  phone: z.string().min(9, { message: "Telefon raqamini to'g'ri kiriting (+998...)." }),
 });
 
 export default function SignupPage() {
@@ -38,21 +36,19 @@ export default function SignupPage() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       username: '',
-      email: '',
       phone: '',
-      password: '',
     },
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
-    const { success, error } = await signup(values.username, values.email, values.password, values.phone);
+    const { success, error } = await signup(values.username, values.phone);
     if (success) {
       toast({
         title: "Muvaffaqiyatli!",
-        description: "Hisobingiz yaratildi va tizimga kirdingiz.",
+        description: "Hisobingiz yaratildi. Endi tizimga kirishingiz mumkin.",
       });
-      router.push('/profile');
+      router.push('/login');
     } else {
         toast({
           variant: "destructive",
@@ -88,38 +84,12 @@ export default function SignupPage() {
               />
               <FormField
                 control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input placeholder="siz@example.com" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
                 name="phone"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Telefon raqami (Ixtiyoriy)</FormLabel>
+                    <FormLabel>Telefon raqami</FormLabel>
                     <FormControl>
                       <Input placeholder="+998901234567" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Parol</FormLabel>
-                    <FormControl>
-                      <Input type="password" placeholder="••••••••" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

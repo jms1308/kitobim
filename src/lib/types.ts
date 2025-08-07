@@ -22,8 +22,7 @@ export interface Book {
 export interface User {
   id: string;
   username: string;
-  email: string | undefined;
-  phone?: string | undefined;
+  phone: string;
   createdAt: string;
   postsCount: number;
 }

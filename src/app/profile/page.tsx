@@ -5,7 +5,7 @@ import AuthGuard from '@/components/AuthGuard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Loader2, Mail, Calendar, Book as BookIcon, Phone } from 'lucide-react';
+import { Loader2, Calendar, Book as BookIcon, Phone } from 'lucide-react';
 import { format } from 'date-fns';
 
 function ProfilePageContent() {
@@ -33,15 +33,8 @@ function ProfilePageContent() {
           </Avatar>
           <div>
             <CardTitle className="text-3xl font-bold">{user.username}</CardTitle>
-            <div className="flex flex-col sm:flex-row gap-x-4 gap-y-1 justify-center mt-1 text-muted-foreground">
-                <span className="flex items-center justify-center gap-2">
-                    <Mail className="h-4 w-4" /> {user.email}
-                </span>
-                {user.phone && (
-                    <span className="flex items-center justify-center gap-2">
-                       <Phone className="h-4 w-4" /> {user.phone}
-                    </span>
-                )}
+            <div className="flex items-center justify-center gap-2 mt-1 text-muted-foreground">
+                <Phone className="h-4 w-4" /> {user.phone}
             </div>
           </div>
         </CardHeader>

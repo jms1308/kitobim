@@ -175,7 +175,6 @@ export const getUserProfile = async (id: string): Promise<User | null> => {
     return {
         id: profile.id,
         username: profile.username,
-        email: profile.email,
         phone: profile.phone,
         createdAt: profile.created_at,
         postsCount: count || 0,
@@ -190,7 +189,10 @@ export const getUserByPhone = async (phone: string): Promise<User | null> => {
         .single();
     
     if (error || !data) {
-        console.error('Error fetching user by phone:', error);
+        // Don't log error if user not found, it's a valid case
+        if (error && error.code !== 'PGRST116') {
+             console.error('Error fetching user by phone:', error);
+        }
         return null;
     }
 
