@@ -180,7 +180,7 @@ export const uploadBookImage = async (file: File): Promise<string | null> => {
     const filePath = `public/${fileName}`;
 
     const { error: uploadError } = await supabase.storage
-        .from('book-images')
+        .from('image-all')
         .upload(filePath, file);
     
     if (uploadError) {
@@ -189,7 +189,7 @@ export const uploadBookImage = async (file: File): Promise<string | null> => {
     }
 
     const { data } = supabase.storage
-        .from('book-images')
+        .from('image-all')
         .getPublicUrl(filePath);
 
     return data.publicUrl;
