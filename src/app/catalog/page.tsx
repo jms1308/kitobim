@@ -13,10 +13,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Search, Filter as FilterIcon, X } from 'lucide-react';
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 
 
@@ -33,6 +35,7 @@ export default function CatalogPage() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedCity, setSelectedCity] = useState('all');
   const [priceRange, setPriceRange] = useState([0, 200000]);
+  const [isFilterOpen, setIsFilterOpen] = useState(true);
   
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -53,6 +56,7 @@ export default function CatalogPage() {
   }, [])
 
   const filteredBooks = useMemo(() => {
+    setCurrentPage(1);
     return allBooks
       .filter(book => 
         (searchQuery === '' || 
@@ -82,60 +86,112 @@ export default function CatalogPage() {
     }
   }
 
+  const activeFiltersCount = [
+      selectedCategory !== 'all',
+      selectedCity !== 'all',
+      searchQuery !== '',
+      priceRange[0] !== 0 || priceRange[1] !== 200000
+    ].filter(Boolean).length;
+    
   return (
     <div className="flex flex-col md:flex-row gap-8">
       <aside className="w-full md:w-1/4 lg:w-1/5">
         <div className="sticky top-20 space-y-6">
-          <h3 className="text-xl font-bold">Filtrlar</h3>
-          <div className="space-y-4">
-             <div className="relative">
-                <Input
-                    type="search"
-                    placeholder="Qidirish..."
-                    className="pr-10"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                />
-                <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-             </div>
-            <div>
-              <label className="text-sm font-medium">Kategoriya</label>
-              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {categories.map(cat => (
-                    <SelectItem key={cat} value={cat === 'Barcha kategoriyalar' ? 'all' : cat}>{cat}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <label className="text-sm font-medium">Shahar</label>
-              <Select value={selectedCity} onValueChange={setSelectedCity}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {cities.map(city => (
-                    <SelectItem key={city} value={city === 'Barcha shaharlar' ? 'all' : city}>{city}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-                <label className="text-sm font-medium mb-2 block">Narx oralig'i</label>
-                <Slider
-                    min={0}
-                    max={200000}
-                    step={5000}
-                    value={priceRange}
-                    onValueChange={(value) => setPriceRange(value)}
-                />
-                <div className="flex justify-between text-xs text-muted-foreground mt-2">
-                    <span>{new Intl.NumberFormat('uz-UZ').format(priceRange[0])} so'm</span>
-                    <span>{new Intl.NumberFormat('uz-UZ').format(priceRange[1])} so'm</span>
+          <Collapsible open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+             <CollapsibleTrigger className="w-full">
+                <div className="flex justify-between items-center p-4 border rounded-lg bg-card md:p-0 md:border-none md:bg-transparent">
+                    <h3 className="text-xl font-bold flex items-center gap-2"><FilterIcon className="h-5 w-5 md:hidden" /> Filtrlar</h3>
+                    <div className="flex items-center gap-2">
+                        {activeFiltersCount > 0 && (
+                            <Badge variant="secondary" className="md:hidden">{activeFiltersCount}</Badge>
+                        )}
+                        <Button variant="ghost" size="icon" className="md:hidden">
+                            <ChevronDown className={`h-5 w-5 transition-transform ${isFilterOpen ? 'rotate-180' : ''}`} />
+                        </Button>
+                    </div>
                 </div>
-            </div>
-            <Button onClick={handleResetFilters} variant="outline" className="w-full">Filtrlarni tozalash</Button>
+             </CollapsibleTrigger>
+             <CollapsibleContent>
+                <div className="p-4 mt-2 border rounded-lg md:p-0 md:mt-0 md:border-none space-y-4">
+                    <div className="relative">
+                        <Input
+                            type="search"
+                            placeholder="Qidirish..."
+                            className="pr-10"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                        />
+                        <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                    </div>
+                    <div>
+                    <label className="text-sm font-medium">Kategoriya</label>
+                    <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                        {categories.map(cat => (
+                            <SelectItem key={cat} value={cat === 'Barcha kategoriyalar' ? 'all' : cat}>{cat}</SelectItem>
+                        ))}
+                        </SelectContent>
+                    </Select>
+                    </div>
+                    <div>
+                    <label className="text-sm font-medium">Shahar</label>
+                    <Select value={selectedCity} onValueChange={setSelectedCity}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                        {cities.map(city => (
+                            <SelectItem key={city} value={city === 'Barcha shaharlar' ? 'all' : city}>{city}</SelectItem>
+                        ))}
+                        </SelectContent>
+                    </Select>
+                    </div>
+                    <div>
+                        <label className="text-sm font-medium mb-2 block">Narx oralig'i</label>
+                        <Slider
+                            min={0}
+                            max={200000}
+                            step={5000}
+                            value={priceRange}
+                            onValueChange={(value) => setPriceRange(value)}
+                        />
+                        <div className="flex justify-between text-xs text-muted-foreground mt-2">
+                            <span>{new Intl.NumberFormat('uz-UZ').format(priceRange[0])} so'm</span>
+                            <span>{new Intl.NumberFormat('uz-UZ').format(priceRange[1])} so'm</span>
+                        </div>
+                    </div>
+                    <Button onClick={handleResetFilters} variant="outline" className="w-full">Filtrlarni tozalash</Button>
+                </div>
+             </CollapsibleContent>
+          </Collapsible>
+          
+           <div className="hidden md:block space-y-2">
+            <h4 className="font-semibold text-sm">Faol filtrlar:</h4>
+             {activeFiltersCount > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                    {searchQuery && (
+                        <Badge variant="secondary" className="flex items-center gap-1">
+                            "{searchQuery}"
+                            <button onClick={() => setSearchQuery('')}><X className="h-3 w-3" /></button>
+                        </Badge>
+                    )}
+                    {selectedCategory !== 'all' && (
+                        <Badge variant="secondary" className="flex items-center gap-1">
+                            {selectedCategory}
+                            <button onClick={() => setSelectedCategory('all')}><X className="h-3 w-3" /></button>
+                        </Badge>
+                    )}
+                    {selectedCity !== 'all' && (
+                        <Badge variant="secondary" className="flex items-center gap-1">
+                            {selectedCity}
+                            <button onClick={() => setSelectedCity('all')}><X className="h-3 w-3" /></button>
+                        </Badge>
+                    )}
+                </div>
+             ) : (
+                <p className="text-xs text-muted-foreground">Filtrlar tanlanmagan</p>
+             )}
           </div>
+
         </div>
       </aside>
       <main className="w-full md:w-3/4 lg:w-4/5">
