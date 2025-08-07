@@ -49,12 +49,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email, pass);
+      // The onAuthStateChanged listener will handle setting the user and loading state.
       return true;
     } catch (error) {
       console.error("Login error:", error);
+      setLoading(false); // Set loading to false on error
       return false;
-    } finally {
-        // We don't setLoading(false) here because the onAuthStateChanged listener will do it.
     }
   };
 
@@ -96,7 +96,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const value = {
     user,
-    isAuthenticated: !loading && !!user,
+    isAuthenticated: !!user, // Simplified this
     loading,
     login,
     signup,
