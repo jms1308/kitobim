@@ -49,7 +49,7 @@ export default function HomePage() {
           Kitoblaringizni soting
         </h1>
         <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-          O'zingiz uchun yangi sarguzashtlarni kashf eting yoki eski kitoblaringizga yangi hayot baxsh eting.
+          Kitoblar sotish va sotib olish uchun qulay platforma
         </p>
          <form onSubmit={handleSearch} className="max-w-xl mx-auto w-full flex gap-2">
           <Input
