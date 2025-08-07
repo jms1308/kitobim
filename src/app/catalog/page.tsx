@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -120,7 +121,7 @@ export default function CatalogPage() {
               </Select>
             </div>
             <div>
-                <label className="text-sm font-medium">Narx oralig'i</label>
+                <label className="text-sm font-medium mb-2 block">Narx oralig'i</label>
                 <Slider
                     min={0}
                     max={200000}

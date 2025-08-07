@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useForm } from 'react-hook-form';
@@ -22,7 +23,7 @@ import { addBook } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { Loader2, Upload } from 'lucide-react';
+import { Loader2, Upload, CheckCircle2, AlertCircle } from 'lucide-react';
 import Image from 'next/image';
 
 const formSchema = z.object({
@@ -68,13 +69,36 @@ function PostBookPageContent() {
     try {
         const newBook = await addBook({ ...values, sellerId: user.id });
         if (newBook) {
-            toast({ title: "Muvaffaqiyat!", description: "Sizning e'loningiz joylashtirildi." });
-            router.push(`/books/${newBook.id}`);
+            toast({
+              title: (
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-5 w-5 text-green-500" /> Muvaffaqiyat!
+                </div>
+              ),
+              description: "Sizning e'loningiz joylashtirildi.",
+            });
+            router.push(`/catalog`);
         } else {
-             toast({ variant: 'destructive', title: "Xatolik!", description: "E'lonni joylashtirishda xato yuz berdi." });
+             toast({ 
+                variant: 'destructive', 
+                title: (
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="h-5 w-5" /> Xatolik!
+                  </div>
+                ),
+                description: "E'lonni joylashtirishda xato yuz berdi." 
+            });
         }
     } catch (error) {
-        toast({ variant: 'destructive', title: "Xatolik!", description: "E'lonni joylashtirishda xato yuz berdi." });
+        toast({ 
+            variant: 'destructive',
+            title: (
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="h-5 w-5" /> Xatolik!
+                </div>
+            ),
+            description: "E'lonni joylashtirishda xato yuz berdi." 
+        });
     } finally {
         setIsLoading(false);
     }
