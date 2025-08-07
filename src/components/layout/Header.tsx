@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import Link from 'next/link';
@@ -31,15 +30,16 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center">
+      <div className="container flex h-16 items-center justify-between">
         <Logo />
-        <nav className="hidden md:flex flex-1 justify-center items-center space-x-6">
+        
+        <nav className="hidden md:flex items-center justify-center flex-1">
           {navLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
               className={cn(
-                "text-sm font-medium transition-colors hover:text-primary",
+                "text-sm font-medium transition-colors hover:text-primary px-4",
                 pathname === link.href ? "text-primary" : "text-muted-foreground"
               )}
             >
@@ -47,7 +47,8 @@ export default function Header() {
             </Link>
           ))}
         </nav>
-        <div className="flex items-center justify-end space-x-4" style={{minWidth: '150px'}}>
+
+        <div className="flex items-center justify-end" style={{minWidth: '100px'}}>
             {loading ? (
                 <Loader2 className="h-6 w-6 animate-spin" />
             ) : isAuthenticated && user ? (
