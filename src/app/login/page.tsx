@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -22,7 +23,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 
 const formSchema = z.object({
-  phone: z.string().min(9, { message: "Telefon raqamini to'g'ri kiriting (+998...)." }),
+  email: z.string().email({ message: "To'g'ri email manzil kiriting." }),
   password: z.string().min(6, { message: "Parol kamida 6 belgidan iborat bo'lishi kerak." }),
 });
 
@@ -34,12 +35,12 @@ export default function LoginPage() {
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: { phone: '', password: '' },
+    defaultValues: { email: '', password: '' },
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
-    const { success, error } = await signIn(values.phone, values.password);
+    const { success, error } = await signIn(values.email, values.password);
     if (success) {
       toast({ title: "Muvaffaqiyatli!", description: "Xush kelibsiz!" });
       router.push('/profile');
@@ -63,12 +64,12 @@ export default function LoginPage() {
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <FormField
                 control={form.control}
-                name="phone"
+                name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Telefon raqami</FormLabel>
+                    <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input placeholder="+998901234567" {...field} />
+                      <Input placeholder="siz@email.com" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

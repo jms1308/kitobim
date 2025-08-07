@@ -177,6 +177,7 @@ export const getUserProfile = async (id: string): Promise<User | null> => {
         id: profile.id,
         username: profile.username,
         phone: profile.phone,
+        email: profile.email,
         createdAt: profile.created_at,
         postsCount: count || 0,
     };

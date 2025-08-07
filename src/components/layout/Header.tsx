@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -63,7 +64,7 @@ export default function Header() {
                   <div className="flex flex-col space-y-1">
                     <p className="text-sm font-medium leading-none">{user.username}</p>
                     <p className="text-xs leading-none text-muted-foreground">
-                      {user.phone}
+                      {user.email}
                     </p>
                   </div>
                 </DropdownMenuLabel>

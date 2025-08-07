@@ -12,8 +12,8 @@ interface AuthContextType {
   user: AppUser | null;
   isAuthenticated: boolean;
   loading: boolean;
-  signIn: (phone: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  signup: (username: string, phone: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  signup: (username: string, phone: string, email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
 }
 
@@ -56,34 +56,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
   
-  const signIn = async (phone: string, password: string) => {
+  const signIn = async (email: string, password: string) => {
       setLoading(true);
-
-      // Create a dummy email from phone for Supabase Auth requirement.
-      // This email is NOT stored anywhere.
-      const dummyEmail = `${phone}@book-bozori.com`;
       
       const { error } = await supabase.auth.signInWithPassword({
-        email: dummyEmail,
+        email: email,
         password: password,
       });
 
       setLoading(false);
 
       if (error) {
-        return { success: false, error: "Telefon raqam yoki parol xato." };
+        return { success: false, error: "Email yoki parol xato." };
       }
       return { success: true };
   };
 
-  const signup = async (username: string, phone: string, password: string) => {
+  const signup = async (username: string, phone: string, email: string, password: string) => {
     setLoading(true);
     
-    // 1. Check if phone number already exists in profiles table
+    // 1. Check if phone number or email already exists
     const { data: existingProfile, error: profileError } = await supabase
         .from('profiles')
-        .select('phone')
-        .eq('phone', phone)
+        .select('phone, email')
+        .or(`phone.eq.${phone},email.eq.${email}`)
         .single();
         
     if (profileError && profileError.code !== 'PGRST116') { // PGRST116 = no rows returned
@@ -93,23 +89,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (existingProfile) {
         setLoading(false);
-        return { success: false, error: "Bu telefon raqami allaqachon ro'yxatdan o'tgan." };
+        let errorMessage = '';
+        if (existingProfile.phone === phone) {
+            errorMessage = "Bu telefon raqami allaqachon ro'yxatdan o'tgan.";
+        } else if (existingProfile.email === email) {
+            errorMessage = "Bu email allaqachon ro'yxatdan o'tgan.";
+        }
+        return { success: false, error: errorMessage };
     }
 
-    // 2. Create a dummy email for Supabase Auth
-    // This email is only used for the signUp call and is not stored in the database.
-    const dummyEmail = `${phone}@book-bozori.com`;
 
-    // 3. Sign up the user in Supabase Auth
+    // 2. Sign up the user in Supabase Auth
     const { data, error } = await supabase.auth.signUp({
-        email: dummyEmail,
+        email: email,
         password: password,
         options: {
-            // Pass username and phone to the trigger via metadata
-            // This is how we avoid storing email in our profiles table.
             data: {
                 username: username,
                 phone: phone,
+                email: email
             }
         }
     });
@@ -118,7 +116,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (error) {
         if (error.message.includes('User already registered')) {
-            return { success: false, error: "Bu telefon raqami allaqachon ro'yxatdan o'tgan." };
+            return { success: false, error: "Bu email allaqachon ro'yxatdan o'tgan." };
         }
         return { success: false, error: error.message };
     }

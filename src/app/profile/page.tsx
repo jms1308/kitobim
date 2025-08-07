@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useAuth } from '@/contexts/AuthContext';
@@ -5,7 +6,7 @@ import AuthGuard from '@/components/AuthGuard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Loader2, Calendar, Book as BookIcon, Phone } from 'lucide-react';
+import { Loader2, Calendar, Book as BookIcon, Phone, Mail } from 'lucide-react';
 import { format } from 'date-fns';
 
 function ProfilePageContent() {
@@ -33,8 +34,13 @@ function ProfilePageContent() {
           </Avatar>
           <div>
             <CardTitle className="text-3xl font-bold">{user.username}</CardTitle>
-            <div className="flex items-center justify-center gap-2 mt-1 text-muted-foreground">
-                <Phone className="h-4 w-4" /> {user.phone}
+             <div className="flex items-center justify-center gap-4 mt-2 text-muted-foreground">
+                <div className="flex items-center gap-2">
+                    <Phone className="h-4 w-4" /> {user.phone}
+                </div>
+                <div className="flex items-center gap-2">
+                     <Mail className="h-4 w-4" /> {user.email}
+                </div>
             </div>
           </div>
         </CardHeader>
