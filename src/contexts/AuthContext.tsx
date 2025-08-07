@@ -59,6 +59,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signIn = async (phone: string, password: string) => {
       setLoading(true);
 
+      // Create a dummy email from phone for Supabase Auth requirement.
+      // This email is NOT stored anywhere.
       const dummyEmail = `${phone}@book-bozori.com`;
       
       const { error } = await supabase.auth.signInWithPassword({
@@ -95,6 +97,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     // 2. Create a dummy email for Supabase Auth
+    // This email is only used for the signUp call and is not stored in the database.
     const dummyEmail = `${phone}@book-bozori.com`;
 
     // 3. Sign up the user in Supabase Auth
@@ -103,6 +106,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         password: password,
         options: {
             // Pass username and phone to the trigger via metadata
+            // This is how we avoid storing email in our profiles table.
             data: {
                 username: username,
                 phone: phone,
