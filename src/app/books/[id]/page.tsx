@@ -122,7 +122,7 @@ export default function BookDetailsPage({ params: { id } }: { params: { id: stri
               <div className="mt-auto pt-6">
               <Dialog>
                   <DialogTrigger asChild>
-                  <Button size="lg" className="w-full text-base md:text-lg transition-transform hover:scale-105">
+                  <Button size="lg" className="w-full text-sm md:text-base transition-transform hover:scale-105">
                       <Phone className="mr-2 h-5 w-5" />
                       Sotuvchi bilan bog'lanish
                   </Button>
