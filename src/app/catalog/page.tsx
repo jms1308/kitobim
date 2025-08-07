@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { getBooks, getCategories, getCities } from '@/lib/api';
 import type { Book } from '@/lib/types';
@@ -22,7 +22,7 @@ import { Badge } from '@/components/ui/badge';
 import { Search, Filter as FilterIcon, X, ChevronDown } from 'lucide-react';
 
 
-export default function CatalogPage() {
+function CatalogView() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -37,17 +37,17 @@ export default function CatalogPage() {
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
   const [selectedCity, setSelectedCity] = useState(searchParams.get('city') || 'all');
-  const [priceRange, setPriceRange] = useState<[number, number]>([
-    parseInt(searchParams.get('min_price') || '0', 10),
-    parseInt(searchParams.get('max_price') || '500000', 10)
-  ]);
   
   const [maxPrice, setMaxPrice] = useState(500000);
+  const [priceRange, setPriceRange] = useState<[number, number]>([
+    parseInt(searchParams.get('min_price') || '0', 10),
+    parseInt(searchParams.get('max_price') || `${maxPrice}`, 10)
+  ]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   // Update URL query string when filters change
   useEffect(() => {
-    const params = new URLSearchParams(searchParams);
+    const params = new URLSearchParams(searchParams.toString());
     if (searchQuery) params.set('q', searchQuery); else params.delete('q');
     if (selectedCategory !== 'all') params.set('category', selectedCategory); else params.delete('category');
     if (selectedCity !== 'all') params.set('city', selectedCity); else params.delete('city');
@@ -81,6 +81,8 @@ export default function CatalogPage() {
                 const maxParam = searchParams.get('max_price');
                 if (!maxParam) {
                     setPriceRange(prev => [prev[0], newMaxPrice]);
+                } else {
+                    setPriceRange(prev => [prev[0], parseInt(maxParam, 10)])
                 }
             }
         } catch (error) {
@@ -94,20 +96,20 @@ export default function CatalogPage() {
   }, []);
 
   const filteredBooks = useMemo(() => {
-    const minPrice = parseInt(searchParams.get('min_price') || '0', 10);
-    const maxPriceValue = parseInt(searchParams.get('max_price') || `${maxPrice}`, 10);
-    const category = searchParams.get('category');
-    const city = searchParams.get('city');
-    const query = searchParams.get('q')?.toLowerCase();
+    const currentCategory = searchParams.get('category');
+    const currentCity = searchParams.get('city');
+    const currentQuery = searchParams.get('q')?.toLowerCase();
+    const currentMinPrice = parseInt(searchParams.get('min_price') || '0', 10);
+    const currentMaxPrice = parseInt(searchParams.get('max_price') || `${maxPrice}`, 10);
 
     return allBooks.filter(book => {
-      const searchMatch = !query ||
-        book.title.toLowerCase().includes(query) || 
-        book.author.toLowerCase().includes(query);
+      const searchMatch = !currentQuery ||
+        book.title.toLowerCase().includes(currentQuery) || 
+        book.author.toLowerCase().includes(currentQuery);
       
-      const categoryMatch = !category || book.category === category;
-      const cityMatch = !city || book.city === city;
-      const priceMatch = book.price >= minPrice && book.price <= maxPriceValue;
+      const categoryMatch = !currentCategory || book.category === currentCategory;
+      const cityMatch = !currentCity || book.city === currentCity;
+      const priceMatch = book.price >= currentMinPrice && book.price <= currentMaxPrice;
 
       return searchMatch && categoryMatch && cityMatch && priceMatch;
     });
@@ -272,4 +274,33 @@ export default function CatalogPage() {
       </main>
     </div>
   );
+}
+
+function CatalogPageSkeleton() {
+    return (
+        <div className="flex flex-col md:flex-row gap-8">
+            <aside className="w-full md:w-1/4 lg:w-1/5">
+                <div className="sticky top-20 space-y-6">
+                    <Skeleton className="h-12 w-full" />
+                    <Skeleton className="h-20 w-full" />
+                    <Skeleton className="h-20 w-full" />
+                    <Skeleton className="h-24 w-full" />
+                </div>
+            </aside>
+            <main className="w-full md:w-3/4 lg:w-4/5">
+                <Skeleton className="h-8 w-1/3 mb-6" />
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {Array.from({length: 12}).map((_, i) => <Skeleton key={i} className="h-96 w-full" />)}
+                </div>
+            </main>
+        </div>
+    )
+}
+
+export default function CatalogPage() {
+    return (
+        <Suspense fallback={<CatalogPageSkeleton />}>
+            <CatalogView />
+        </Suspense>
+    )
 }
