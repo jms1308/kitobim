@@ -51,13 +51,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const userCredential = await signInWithEmailAndPassword(auth, email, pass);
       const appUser = await getUserById(userCredential.user.uid);
       setUser(appUser);
-      setLoading(false);
       return true;
     } catch (error) {
       console.error("Login error:", error);
       setUser(null);
-      setLoading(false);
       return false;
+    } finally {
+      setLoading(false);
     }
   };
 
