@@ -35,9 +35,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true); // Only true on initial load
   const router = useRouter();
 
-  const handleSetUser = useCallback((userData: Omit<User, 'avatarUrl'> | null) => {
+  const handleSetUser = useCallback((userData: Omit<User, 'avatarUrl'> | null, avatarUrl?: string) => {
     if (userData) {
-      const avatarUrl = getRandomAvatarUrl(userData.id);
       setUser({ ...userData, avatarUrl });
     } else {
       setUser(null);
@@ -45,17 +44,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    // This effect runs only once on initial mount to check for a logged-in user.
     const checkUserOnLoad = async () => {
       setLoading(true);
       try {
         const storedUserId = localStorage.getItem('userId');
-        if (storedUserId) {
+        const storedAvatarUrl = localStorage.getItem('avatarUrl');
+        if (storedUserId && storedAvatarUrl) {
           const profile = await getUserProfile(storedUserId);
           if (profile) {
-            handleSetUser(profile);
+            handleSetUser(profile, storedAvatarUrl);
           } else {
              localStorage.removeItem('userId');
+             localStorage.removeItem('avatarUrl');
              handleSetUser(null);
           }
         } else {
@@ -74,8 +74,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signup = async (username: string, phone: string, password: string) => {
     const { data, success, error } = await createUser(username, phone, password);
     if (success && data) {
-      handleSetUser(data);
+      const newAvatarUrl = getRandomAvatarUrl(data.id);
       localStorage.setItem('userId', data.id);
+      localStorage.setItem('avatarUrl', newAvatarUrl);
+      handleSetUser(data, newAvatarUrl);
       return { success: true };
     }
     return { success: false, error };
@@ -84,8 +86,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (phone: string, password: string) => {
       const loggedInUser = await loginUser(phone, password);
       if (loggedInUser) {
-        handleSetUser(loggedInUser);
+        const newAvatarUrl = getRandomAvatarUrl(loggedInUser.id);
         localStorage.setItem('userId', loggedInUser.id);
+        localStorage.setItem('avatarUrl', newAvatarUrl);
+        handleSetUser(loggedInUser, newAvatarUrl);
         return { success: true };
       }
       return { success: false, error: "Telefon raqami yoki parol xato." };
@@ -94,6 +98,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = () => {
     handleSetUser(null);
     localStorage.removeItem('userId');
+    localStorage.removeItem('avatarUrl');
     router.push('/login');
   };
 
