@@ -6,7 +6,6 @@ import { getBooks, deleteBook } from '@/lib/api';
 import type { Book } from '@/lib/types';
 import BookCard from '@/components/BookCard';
 import AuthGuard from '@/components/AuthGuard';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Trash2 } from 'lucide-react';
 import {
@@ -25,26 +24,30 @@ import Link from 'next/link';
 
 function MyPostsPageContent() {
   const { user } = useAuth();
-  const [books, setBooks] = useState<Book[]>([]);
-  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  useEffect(() => {
+  // We manage the list of books in state so we can update it after deletion.
+  const [userBooks, setUserBooks] = useState<Book[]>(() => {
     if (user) {
-      setLoading(true);
-      const userBooks = getBooks({ userId: user.id });
-      setBooks(userBooks);
-      setLoading(false);
+      return getBooks({ userId: user.id });
+    }
+    return [];
+  });
+  
+  // Update books if user changes (e.g. logs in/out)
+  useEffect(() => {
+    if(user) {
+        setUserBooks(getBooks({ userId: user.id }));
     } else {
-      setLoading(false);
+        setUserBooks([]);
     }
   }, [user]);
 
-  const handleDelete = async (bookId: string) => {
+  const handleDelete = (bookId: string) => {
     if (!user) return;
     const result = deleteBook(bookId, user.id);
     if (result.success) {
-      setBooks(books.filter(book => book.id !== bookId));
+      setUserBooks(prevBooks => prevBooks.filter(book => book.id !== bookId));
       toast({
         title: "Muvaffaqiyatli!",
         description: "E'lon o'chirildi.",
@@ -58,29 +61,16 @@ function MyPostsPageContent() {
     }
   };
 
-  if (loading) {
-    return (
-        <div>
-        <h1 className="text-3xl font-bold font-headline mb-6">Mening e'lonlarim</h1>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {Array.from({ length: 4 }).map((_, index) => (
-            <div key={index} className="space-y-2">
-              <Skeleton className="h-64 w-full" />
-              <Skeleton className="h-6 w-3/4" />
-              <Skeleton className="h-4 w-1/2" />
-            </div>
-          ))}
-        </div>
-      </div>
-    );
+  if (!user) {
+      return null;
   }
 
   return (
     <div>
       <h1 className="text-3xl font-bold font-headline mb-6">Mening e'lonlarim</h1>
-      {books.length > 0 ? (
+      {userBooks.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {books.map((book) => (
+          {userBooks.map((book) => (
             <div key={book.id} className="relative group">
               <BookCard book={book} />
               <AlertDialog>

@@ -1,12 +1,11 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { getBookById } from '@/lib/api';
 import type { Book } from '@/lib/types';
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
 import {
   Dialog,
   DialogContent,
@@ -20,21 +19,8 @@ import { format } from 'date-fns';
 import { uz } from 'date-fns/locale';
 
 export default function BookDetailsPage({ params }: { params: { id: string } }) {
-  const [book, setBook] = useState<Book | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    setLoading(true);
-    const data = getBookById(params.id);
-    if(data) {
-      setBook(data);
-    }
-    setLoading(false);
-  }, [params.id]);
-
-  if (loading) {
-    return <BookDetailsSkeleton />;
-  }
+  // Data is fetched synchronously, no loading state needed.
+  const book = getBookById(params.id);
 
   if (!book) {
     return <div className="text-center py-10">Kitob topilmadi.</div>;
@@ -115,27 +101,4 @@ export default function BookDetailsPage({ params }: { params: { id: string } }) 
       </div>
     </div>
   );
-}
-
-
-function BookDetailsSkeleton() {
-    return (
-        <div className="grid md:grid-cols-2 gap-8 md:gap-12 max-w-6xl mx-auto bg-card p-8 rounded-2xl shadow-lg">
-            <Skeleton className="w-full h-[500px] rounded-xl" />
-            <div className="flex flex-col space-y-4">
-                <Skeleton className="h-6 w-24" />
-                <Skeleton className="h-12 w-3/4" />
-                <Skeleton className="h-8 w-1/2" />
-                <Skeleton className="h-10 w-1/3" />
-                <div className="space-y-2 pt-4">
-                    <Skeleton className="h-5 w-full" />
-                    <Skeleton className="h-5 w-full" />
-                    <Skeleton className="h-5 w-3/4" />
-                </div>
-                <div className="pt-8 mt-auto">
-                    <Skeleton className="h-12 w-full" />
-                </div>
-            </div>
-        </div>
-    )
 }
