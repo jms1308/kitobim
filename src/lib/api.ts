@@ -1,10 +1,6 @@
 import type { Book, User } from './types';
 import { mockBooks, mockUsers } from './mock-data';
 
-// Simulating API delay
-const API_DELAY = 0;
-const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
-
 const convertBookTimestamps = (book: Book): Book => {
     if (book.createdAt instanceof Date) {
         return { ...book, createdAt: book.createdAt.toISOString() };
@@ -30,8 +26,6 @@ export const getBooks = async ({
   maxPrice?: number;
   userId?: string;
 }): Promise<Book[]> => {
-  await delay(API_DELAY);
-  
   let books = mockBooks;
 
   if (category && category !== 'all') {
@@ -54,7 +48,6 @@ export const getBooks = async ({
 };
 
 export const getBookById = async (id: string): Promise<Book | undefined> => {
-  await delay(API_DELAY);
   const book = mockBooks.find(b => b.id === id);
   if (book) {
      const seller = mockUsers.find(u => u.id === book.sellerId);
@@ -67,7 +60,6 @@ export const getBookById = async (id: string): Promise<Book | undefined> => {
 };
 
 export const addBook = async (bookData: Omit<Book, 'id' | 'createdAt' | 'sellerContact'>): Promise<Book> => {
-  await delay(API_DELAY);
   const newBook: Book = {
     ...bookData,
     id: `book-${Date.now()}`,
@@ -78,7 +70,6 @@ export const addBook = async (bookData: Omit<Book, 'id' | 'createdAt' | 'sellerC
 };
 
 export const deleteBook = async (id: string, userId: string): Promise<{ success: boolean }> => {
-  await delay(API_DELAY);
   const bookIndex = mockBooks.findIndex(b => b.id === id && b.sellerId === userId);
   if (bookIndex > -1) {
     mockBooks.splice(bookIndex, 1);
@@ -88,19 +79,16 @@ export const deleteBook = async (id: string, userId: string): Promise<{ success:
 };
 
 export const getCategories = async (): Promise<string[]> => {
-    await delay(API_DELAY);
     const categories = new Set(mockBooks.map(doc => doc.category as string));
     return Array.from(categories);
 }
 
 export const getCities = async (): Promise<string[]> => {
-    await delay(API_DELAY);
     const cities = new Set(mockBooks.map(doc => doc.city as string));
     return Array.from(cities);
 }
 
 export const getUserById = async (id: string): Promise<User | null> => {
-    await delay(API_DELAY);
     const user = mockUsers.find(u => u.id === id);
     if(user) {
         const postsCount = mockBooks.filter(b => b.sellerId === id).length;
