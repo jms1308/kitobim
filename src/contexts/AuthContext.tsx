@@ -12,7 +12,7 @@ import {
   signOut,
   User as FirebaseUser
 } from 'firebase/auth';
-import { doc, setDoc, getDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
+import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { getUserById } from '@/lib/api';
 
 
@@ -34,15 +34,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      setLoading(true);
       if (firebaseUser) {
-        try {
-            const appUser = await getUserById(firebaseUser.uid);
-            setUser(appUser);
-        } catch (error) {
-            console.error("Failed to fetch user data:", error);
-            setUser(null);
-        }
+        const appUser = await getUserById(firebaseUser.uid);
+        setUser(appUser);
       } else {
         setUser(null);
       }
@@ -74,10 +68,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
       const firebaseUser = userCredential.user;
       
-      const newUser: Omit<AppUser, 'id' | 'postsCount'> = {
+      const newUser: Omit<AppUser, 'id' | 'postsCount' | 'createdAt'> = {
         username,
         email,
-        createdAt: new Date().toISOString()
       };
 
       await setDoc(doc(db, "users", firebaseUser.uid), {

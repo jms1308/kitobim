@@ -42,20 +42,29 @@ export default function LoginPage() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
-    const success = await login(values.email, values.password);
-    if (success) {
-      toast({
-        title: "Muvaffaqiyatli!",
-        description: "Xush kelibsiz!",
-      });
-      router.push('/profile');
-    } else {
-      toast({
-        variant: "destructive",
-        title: "Xatolik!",
-        description: "Email yoki parol noto'g'ri.",
-      });
-      setIsSubmitting(false);
+    try {
+      const success = await login(values.email, values.password);
+      if (success) {
+        toast({
+          title: "Muvaffaqiyatli!",
+          description: "Xush kelibsiz!",
+        });
+        router.push('/profile');
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Xatolik!",
+          description: "Email yoki parol noto'g'ri.",
+        });
+      }
+    } catch (error) {
+       toast({
+          variant: "destructive",
+          title: "Xatolik!",
+          description: "Tizimga kirishda noma'lum xatolik.",
+        });
+    } finally {
+       setIsSubmitting(false);
     }
   }
 
