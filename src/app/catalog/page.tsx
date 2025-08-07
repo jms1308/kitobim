@@ -18,7 +18,7 @@ import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Search, Filter as FilterIcon, X } from 'lucide-react';
+import { Search, Filter as FilterIcon, X, ChevronDown } from 'lucide-react';
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 
 
@@ -209,6 +209,7 @@ export default function CatalogPage() {
             ) : (
                 <div className='text-center py-16 bg-card rounded-lg'>
                     <p className='text-muted-foreground'>Filtrlarga mos kitoblar topilmadi.</p>
+
                 </div>
             )}
             {totalPages > 1 && (
