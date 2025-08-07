@@ -89,7 +89,7 @@ export default function BookDetailsPage({ params: { id } }: { params: { id: stri
             <ArrowLeft className="mr-2 h-4 w-4" />
             Qaytish
         </Button>
-        <div className="grid md:grid-cols-2 gap-8 md:gap-12 max-w-6xl mx-auto bg-card p-8 rounded-2xl shadow-lg">
+        <div className="grid md:grid-cols-2 gap-8 md:gap-12 max-w-6xl mx-auto bg-card p-4 md:p-8 rounded-2xl shadow-lg">
         <div className="w-full">
             <Image
             src={book.imageUrl}
@@ -102,9 +102,9 @@ export default function BookDetailsPage({ params: { id } }: { params: { id: stri
         </div>
         <div className="flex flex-col">
             <Badge variant={conditionVariant[book.condition]} className="capitalize w-fit mb-2">{book.condition}</Badge>
-            <h1 className="text-4xl font-bold font-headline mb-2">{book.title}</h1>
-            <p className="text-xl text-muted-foreground mb-4">{book.author}</p>
-            <p className="text-3xl font-bold text-primary mb-6">
+            <h1 className="text-3xl md:text-4xl font-bold font-headline mb-2">{book.title}</h1>
+            <p className="text-lg md:text-xl text-muted-foreground mb-4">{book.author}</p>
+            <p className="text-2xl md:text-3xl font-bold text-primary mb-6">
             {new Intl.NumberFormat('uz-UZ', { style: 'currency', currency: 'UZS', maximumFractionDigits: 0 }).format(book.price)}
             </p>
             
