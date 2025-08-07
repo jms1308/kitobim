@@ -51,7 +51,11 @@ export default function HomePage() {
         <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
           O'zingiz uchun yangi sarguzashtlarni kashf eting yoki eski kitoblaringizga yangi hayot baxsh eting.
         </p>
-        <form onSubmit={handleSearch} className="max-w-xl mx-auto flex gap-2">
+      </section>
+
+      <section>
+        <h2 className="text-3xl font-bold font-headline mb-4">{resultTitle}</h2>
+         <form onSubmit={handleSearch} className="max-w-xl w-full flex gap-2 mb-6">
           <Input
             type="search"
             placeholder="Sarlavha yoki muallif bo'yicha qidirish..."
@@ -59,15 +63,16 @@ export default function HomePage() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
-          <Button type="submit" size="lg" className="transition-transform hover:scale-105" disabled={isLoading}>
+          <Button type="submit" size="icon" className="md:hidden transition-transform hover:scale-105" disabled={isLoading}>
+            <Search className="h-5 w-5" />
+             <span className="sr-only">Qidirish</span>
+          </Button>
+          <Button type="submit" size="lg" className="hidden md:flex transition-transform hover:scale-105" disabled={isLoading}>
             <Search className="h-5 w-5 mr-2" />
             {isLoading ? 'Qidirilmoqda...' : 'Qidirish'}
           </Button>
         </form>
-      </section>
 
-      <section>
-        <h2 className="text-3xl font-bold font-headline mb-6">{resultTitle}</h2>
         {isLoading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {Array.from({length: 8}).map((_, i) => <Skeleton key={i} className="h-96 w-full" />)}
