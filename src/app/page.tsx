@@ -51,11 +51,7 @@ export default function HomePage() {
         <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
           O'zingiz uchun yangi sarguzashtlarni kashf eting yoki eski kitoblaringizga yangi hayot baxsh eting.
         </p>
-      </section>
-
-      <section>
-        <h2 className="text-3xl font-bold font-headline mb-4">{resultTitle}</h2>
-         <form onSubmit={handleSearch} className="max-w-xl w-full flex gap-2 mb-6">
+         <form onSubmit={handleSearch} className="max-w-xl mx-auto w-full flex gap-2">
           <Input
             type="search"
             placeholder="Sarlavha yoki muallif bo'yicha qidirish..."
@@ -72,7 +68,10 @@ export default function HomePage() {
             {isLoading ? 'Qidirilmoqda...' : 'Qidirish'}
           </Button>
         </form>
+      </section>
 
+      <section>
+        <h2 className="text-3xl font-bold font-headline mb-6">{resultTitle}</h2>
         {isLoading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {Array.from({length: 8}).map((_, i) => <Skeleton key={i} className="h-96 w-full" />)}
