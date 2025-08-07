@@ -30,7 +30,7 @@ export default function LoginPage() {
   const { login } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -41,7 +41,7 @@ export default function LoginPage() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    setIsLoading(true);
+    setIsSubmitting(true);
     const success = await login(values.email, values.password);
     if (success) {
       toast({
@@ -55,8 +55,8 @@ export default function LoginPage() {
         title: "Xatolik!",
         description: "Email yoki parol noto'g'ri.",
       });
+      setIsSubmitting(false);
     }
-    setIsLoading(false);
   }
 
   return (
@@ -95,8 +95,8 @@ export default function LoginPage() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full transition-transform hover:scale-105" disabled={isLoading}>
-                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              <Button type="submit" className="w-full transition-transform hover:scale-105" disabled={isSubmitting}>
+                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Kirish
               </Button>
             </form>

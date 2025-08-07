@@ -10,6 +10,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
+    // Wait until loading is finished
     if (!loading && !isAuthenticated) {
       router.push('/login');
     }
@@ -26,9 +27,11 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
+  // If authenticated, render the children
   if (isAuthenticated) {
     return <>{children}</>;
   }
 
+  // If not authenticated and not loading, it will redirect, so return null.
   return null;
 }

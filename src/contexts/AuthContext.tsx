@@ -33,6 +33,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      setLoading(true);
       if (firebaseUser) {
         const appUser = await getUserById(firebaseUser.uid);
         setUser(appUser);
@@ -48,16 +49,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (email: string, pass: string): Promise<boolean> => {
     setLoading(true);
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, pass);
-      const appUser = await getUserById(userCredential.user.uid);
-      setUser(appUser);
+      await signInWithEmailAndPassword(auth, email, pass);
+      // onAuthStateChanged will handle setting the user and loading state
       return true;
     } catch (error) {
       console.error("Login error:", error);
       setUser(null);
+      setLoading(false); // Stop loading on error
       return false;
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -77,12 +76,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           ...newUser,
           createdAt: serverTimestamp()
       });
+      // After signup, Firebase automatically signs in the user,
+      // so onAuthStateChanged will trigger.
       return { success: true };
     } catch (error: any) {
       console.error("Signup error:", error);
+      setLoading(false); // Stop loading on error
       return { success: false, errorCode: error.code };
-    } finally {
-        setLoading(false);
     }
   };
 
@@ -98,7 +98,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const value = {
     user,
-    isAuthenticated: !!user,
+    isAuthenticated: !loading && !!user,
     loading,
     login,
     signup,
