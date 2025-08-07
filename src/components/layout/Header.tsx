@@ -33,7 +33,7 @@ export default function Header() {
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center">
         <Logo />
-        <nav className="hidden md:flex items-center space-x-6 ml-10">
+        <nav className="hidden md:flex flex-1 justify-center items-center space-x-6">
           {navLinks.map((link) => (
             <Link
               key={link.href}
@@ -47,7 +47,7 @@ export default function Header() {
             </Link>
           ))}
         </nav>
-        <div className="flex flex-1 items-center justify-end space-x-4">
+        <div className="flex items-center justify-end space-x-4" style={{minWidth: '150px'}}>
             {loading ? (
                 <Loader2 className="h-6 w-6 animate-spin" />
             ) : isAuthenticated && user ? (
