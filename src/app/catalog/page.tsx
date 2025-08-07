@@ -82,20 +82,20 @@ export default function CatalogPage() {
     <div className="flex flex-col md:flex-row gap-8">
       <aside className="w-full md:w-1/4 lg:w-1/5">
         <div className="sticky top-20 space-y-6">
-          <Collapsible open={isFilterOpen} onOpenChange={setIsFilterOpen} className="md:block">
-             <div className="flex justify-between items-center p-4 border rounded-lg bg-card md:p-0 md:border-none md:bg-transparent">
+          <Collapsible open={isFilterOpen} onOpenChange={setIsFilterOpen} className="md:hidden">
+             <div className="flex justify-between items-center p-4 border rounded-lg bg-card">
                 <CollapsibleTrigger asChild>
                   <div className="w-full text-left">
                       <h3 className="text-xl font-bold flex items-center gap-2">
-                          <FilterIcon className="h-5 w-5 md:hidden" />
+                          <FilterIcon className="h-5 w-5" />
                           Filtrlar
                           {activeFiltersCount > 0 && (
-                              <Badge variant="secondary" className="ml-2 md:hidden">{activeFiltersCount}</Badge>
+                              <Badge variant="secondary" className="ml-2">{activeFiltersCount}</Badge>
                           )}
                       </h3>
                   </div>
                 </CollapsibleTrigger>
-                <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setIsFilterOpen(prev => !prev)}>
+                <Button variant="ghost" size="icon" onClick={() => setIsFilterOpen(prev => !prev)}>
                     <ChevronDown className={`h-5 w-5 transition-transform ${isFilterOpen ? 'rotate-180' : ''}`} />
                 </Button>
             </div>
@@ -152,35 +152,86 @@ export default function CatalogPage() {
              </CollapsibleContent>
           </Collapsible>
           
-           <div className="hidden md:block space-y-2">
-            <h4 className="font-semibold text-sm">Faol filtrlar:</h4>
-             {activeFiltersCount > 0 ? (
-                <div className="flex flex-wrap gap-2">
-                    {searchQuery && (
-                        <Badge variant="secondary" className="flex items-center gap-1">
-                            "{searchQuery}"
-                            <button onClick={() => setSearchQuery('')}><X className="h-3 w-3" /></button>
-                        </Badge>
-                    )}
-                    {selectedCategory !== 'all' && (
-                        <Badge variant="secondary" className="flex items-center gap-1">
-                            {selectedCategory}
-                            <button onClick={() => setSelectedCategory('all')}><X className="h-3 w-3" /></button>
-
-                        </Badge>
-                    )}
-                    {selectedCity !== 'all' && (
-                        <Badge variant="secondary" className="flex items-center gap-1">
-                            {selectedCity}
-                            <button onClick={() => setSelectedCity('all')}><X className="h-3 w-3" /></button>
-                        </Badge>
-                    )}
+           <div className="hidden md:block space-y-6">
+             <h3 className="text-xl font-bold">Filtrlar</h3>
+             <div className="space-y-4">
+                 <div className="relative">
+                    <Input
+                        type="search"
+                        placeholder="Qidirish..."
+                        className="pr-10"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                    <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 </div>
-             ) : (
-                <p className="text-xs text-muted-foreground">Filtrlar tanlanmagan</p>
-             )}
-          </div>
+                <div>
+                <label className="text-sm font-medium">Kategoriya</label>
+                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                    {categories.map(cat => (
+                        <SelectItem key={cat} value={cat === 'Barcha kategoriyalar' ? 'all' : cat}>{cat}</SelectItem>
+                    ))}
+                    </SelectContent>
+                </Select>
+                </div>
+                <div>
+                <label className="text-sm font-medium">Shahar</label>
+                <Select value={selectedCity} onValueChange={setSelectedCity}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                    {cities.map(city => (
+                        <SelectItem key={city} value={city === 'Barcha shaharlar' ? 'all' : city}>{city}</SelectItem>
+                    ))}
+                    </SelectContent>
+                </Select>
+                </div>
+                <div>
+                    <label className="text-sm font-medium mb-2 block">Narx oralig'i</label>
+                    <Slider
+                        min={0}
+                        max={200000}
+                        step={5000}
+                        value={priceRange}
+                        onValueChange={(value) => setPriceRange(value)}
+                    />
+                    <div className="flex justify-between text-xs text-muted-foreground mt-2">
+                        <span>{new Intl.NumberFormat('uz-UZ').format(priceRange[0])} so'm</span>
+                        <span>{new Intl.NumberFormat('uz-UZ').format(priceRange[1])} so'm</span>
+                    </div>
+                </div>
+                <Button onClick={handleResetFilters} variant="outline" className="w-full">Filtrlarni tozalash</Button>
+            </div>
+            <div className="space-y-2">
+              <h4 className="font-semibold text-sm">Faol filtrlar:</h4>
+              {activeFiltersCount > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                      {searchQuery && (
+                          <Badge variant="secondary" className="flex items-center gap-1">
+                              "{searchQuery}"
+                              <button onClick={() => setSearchQuery('')}><X className="h-3 w-3" /></button>
+                          </Badge>
+                      )}
+                      {selectedCategory !== 'all' && (
+                          <Badge variant="secondary" className="flex items-center gap-1">
+                              {selectedCategory}
+                              <button onClick={() => setSelectedCategory('all')}><X className="h-3 w-3" /></button>
 
+                          </Badge>
+                      )}
+                      {selectedCity !== 'all' && (
+                          <Badge variant="secondary" className="flex items-center gap-1">
+                              {selectedCity}
+                              <button onClick={() => setSelectedCity('all')}><X className="h-3 w-3" /></button>
+                          </Badge>
+                      )}
+                  </div>
+              ) : (
+                  <p className="text-xs text-muted-foreground">Filtrlar tanlanmagan</p>
+              )}
+            </div>
+          </div>
         </div>
       </aside>
       <main className="w-full md:w-3/4 lg:w-4/5">
