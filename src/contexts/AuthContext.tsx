@@ -6,7 +6,7 @@ import type { User as AppUser } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
 import { getUserProfile } from '@/lib/api';
-import type { AuthChangeEvent, Session } from '@supabase/supabase-js';
+import type { AuthChangeEvent, Session, User } from '@supabase/supabase-js';
 
 interface AuthContextType {
   user: AppUser | null;
@@ -24,32 +24,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  const handleAuthChange = async (event: AuthChangeEvent, session: Session | null) => {
-    setLoading(true);
-    if (session && session.user) {
-      const profile = await getUserProfile(session.user.id);
-      setUser(profile);
-    } else {
-      setUser(null);
-    }
-    setLoading(false);
-  };
-  
   useEffect(() => {
-    const { data: authListener } = supabase.auth.onAuthStateChange(handleAuthChange);
-    
-    const checkInitialSession = async () => {
+    const handleAuthChange = async (event: AuthChangeEvent, session: Session | null) => {
       setLoading(true);
-      const { data: { session } } = await supabase.auth.getSession();
       if (session && session.user) {
-        const profile = await getUserProfile(session.user.id);
-        setUser(profile);
+        try {
+          const profile = await getUserProfile(session.user.id);
+          setUser(profile);
+        } catch (e) {
+            setUser(null);
+        }
       } else {
         setUser(null);
       }
       setLoading(false);
     };
+
+    // Dastlabki sessiyani tekshirish
+    const checkInitialSession = async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        handleAuthChange('INITIAL_SESSION', session);
+    };
+
     checkInitialSession();
+    
+    // Auth holati o'zgarganda tinglash
+    const { data: authListener } = supabase.auth.onAuthStateChange(handleAuthChange);
 
     return () => {
       authListener.subscription.unsubscribe();
@@ -75,7 +75,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signup = async (username: string, phone: string, email: string, password: string) => {
     setLoading(true);
     
-    // 1. Check if phone number or email already exists
+    // 1. Foydalanuvchi mavjudligini tekshirish
     const { data: existingProfile, error: profileError } = await supabase
         .from('profiles')
         .select('phone, email')
@@ -98,18 +98,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { success: false, error: errorMessage };
     }
 
-
-    // 2. Sign up the user in Supabase Auth
+    // 2. Yangi foydalanuvchi yaratish
     const { data, error } = await supabase.auth.signUp({
-        email: email, // Correct position for email
-        password: password, // Correct position for password
-        options: {
-            data: {
-                username: username,
-                phone: phone,
-                email: email, // Also pass here for the trigger
-            }
-        }
+      email, // Asosiy parametr
+      password, // Asosiy parametr
+      options: {
+        data: {
+          username, // Qo'shimcha ma'lumotlar
+          phone,
+          email, // Trigger uchun
+        },
+      },
     });
 
     setLoading(false);
@@ -118,7 +117,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (error.message.includes('User already registered')) {
             return { success: false, error: "Bu email allaqachon ro'yxatdan o'tgan." };
         }
-        return { success: false, error: error.message };
+        return { success: false, error: "Ro'yxatdan o'tishda xatolik: " + error.message };
     }
     
     if (!data.user) {
@@ -157,3 +156,4 @@ export const useAuth = () => {
   }
   return context;
 };
+
