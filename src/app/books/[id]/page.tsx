@@ -50,10 +50,9 @@ function BookDetailsSkeleton() {
     )
 }
 
-export default function BookDetailsPage({ params }: { params: { id: string } }) {
+export default function BookDetailsPage({ params: { id } }: { params: { id: string } }) {
   const [book, setBook] = useState<Book | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const id = params.id;
   const router = useRouter();
 
   useEffect(() => {
