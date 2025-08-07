@@ -32,7 +32,7 @@ export default function CatalogPage() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedCity, setSelectedCity] = useState('all');
   const [priceRange, setPriceRange] = useState([0, 200000]);
-  const [isFilterOpen, setIsFilterOpen] = useState(true);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   
 
   useEffect(() => {
@@ -89,7 +89,7 @@ export default function CatalogPage() {
                         <FilterIcon className="h-5 w-5 md:hidden" />
                         Filtrlar
                         {activeFiltersCount > 0 && (
-                            <Badge variant="secondary" className="md:hidden">{activeFiltersCount}</Badge>
+                            <Badge variant="secondary" className="ml-2 md:hidden">{activeFiltersCount}</Badge>
                         )}
                     </h3>
                 </CollapsibleTrigger>
