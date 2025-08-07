@@ -5,8 +5,8 @@ import React, { createContext, useState, useEffect, useContext } from 'react';
 import type { User as AppUser } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
-import { getUserProfile, getUserByPhone } from '@/lib/api';
-import type { AuthChangeEvent, Session, User } from '@supabase/supabase-js';
+import { getUserProfile } from '@/lib/api';
+import type { AuthChangeEvent, Session } from '@supabase/supabase-js';
 
 interface AuthContextType {
   user: AppUser | null;
@@ -44,6 +44,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (session && session.user) {
         const profile = await getUserProfile(session.user.id);
         setUser(profile);
+      } else {
+        setUser(null);
       }
       setLoading(false);
     };
@@ -57,19 +59,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signIn = async (phone: string, password: string) => {
       setLoading(true);
       
-      const { data: authUser, error: userError } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('email')
+        .select('*')
         .eq('phone', phone)
         .single();
         
-      if (userError || !authUser) {
+      if (profileError || !profile) {
           setLoading(false);
           return { success: false, error: "Telefon raqam yoki parol xato." };
       }
       
       const { error } = await supabase.auth.signInWithPassword({
-        email: authUser.email as string,
+        email: profile.email as string,
         password: password,
       });
 
@@ -90,7 +92,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .eq('phone', phone)
         .single();
         
-    if (profileError && profileError.code !== 'PGRST116') {
+    if (profileError && profileError.code !== 'PGRST116') { // PGRST116 = no rows returned
         setLoading(false);
         return { success: false, error: "Tekshirishda xatolik: " + profileError.message };
     }
@@ -109,6 +111,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             data: {
                 username: username,
                 phone: phone,
+                email: dummyEmail
             }
         }
     });

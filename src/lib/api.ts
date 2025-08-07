@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { Book, User } from './types';
@@ -24,7 +25,7 @@ export const getBooks = async ({
     
     let query = supabase.from('books').select(`
         *,
-        seller:profiles(username)
+        seller:profiles(username, phone)
     `);
 
     if (category && category !== 'all') {
@@ -96,7 +97,7 @@ export const getBookById = async (id: string): Promise<Book | null> => {
 export const addBook = async (bookData: Omit<Book, 'id' | 'createdAt' | 'sellerContact'>): Promise<Book | null> => {
     const { data, error } = await supabase
         .from('books')
-        .insert({ ...bookData, createdAt: new Date().toISOString() })
+        .insert({ ...bookData })
         .select()
         .single();
     
@@ -179,22 +180,4 @@ export const getUserProfile = async (id: string): Promise<User | null> => {
         createdAt: profile.created_at,
         postsCount: count || 0,
     };
-}
-
-export const getUserByPhone = async (phone: string): Promise<User | null> => {
-    const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('phone', phone)
-        .single();
-    
-    if (error || !data) {
-        // Don't log error if user not found, it's a valid case
-        if (error && error.code !== 'PGRST116') {
-             console.error('Error fetching user by phone:', error);
-        }
-        return null;
-    }
-
-    return data as User;
 }
