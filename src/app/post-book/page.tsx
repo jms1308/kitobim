@@ -23,8 +23,9 @@ import { addBook } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { Loader2, Upload, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Loader2, Upload, CheckCircle2, AlertCircle, ExternalLink } from 'lucide-react';
 import Image from 'next/image';
+import Link from 'next/link';
 
 const formSchema = z.object({
   title: z.string().min(3, { message: "Sarlavha kamida 3 belgidan iborat bo'lishi kerak." }),
@@ -201,15 +202,21 @@ function PostBookPageContent() {
             <div className="grid md:grid-cols-2 gap-6 items-start">
                 <div className="space-y-6">
                     <FormField
-                    control={form.control}
-                    name="imageUrl"
-                    render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Rasm URL manzili</FormLabel>
-                        <FormControl><Input placeholder="https://placehold.co/600x800.png" {...field} /></FormControl>
-                        <FormMessage />
-                        </FormItem>
-                    )}
+                      control={form.control}
+                      name="imageUrl"
+                      render={({ field }) => (
+                          <FormItem>
+                          <FormLabel>Rasm URL manzili</FormLabel>
+                            <FormControl><Input placeholder="https://example.com/rasm.png" {...field} /></FormControl>
+                            <Button asChild variant="link" size="sm" className="p-0 h-auto">
+                                <Link href="https://postimages.org/" target="_blank" rel="noopener noreferrer">
+                                    Rasm yuklash va link olish
+                                    <ExternalLink className="ml-1.5 h-4 w-4" />
+                                </Link>
+                            </Button>
+                          <FormMessage />
+                          </FormItem>
+                      )}
                     />
                     <FormField
                     control={form.control}
