@@ -129,12 +129,12 @@ export default function BookDetailsPage({ params: { id } }: { params: { id: stri
                   </DialogTrigger>
                   <DialogContent>
                   <DialogHeader>
-                      <DialogTitle className="text-2xl">Sotuvchi ma'lumotlari</DialogTitle>
+                      <DialogTitle className="text-xl md:text-2xl">Sotuvchi ma'lumotlari</DialogTitle>
                       <DialogDescription>
                       Kitobni sotib olish uchun sotuvchi bilan bog'laning.
                       </DialogDescription>
                   </DialogHeader>
-                  <div className="space-y-4 py-4">
+                  <div className="space-y-4 py-4 text-sm md:text-base">
                       <div className="flex items-center gap-4">
                           <User className="h-5 w-5 text-muted-foreground" />
                           <span>{book.sellerContact?.name}</span>
