@@ -6,7 +6,7 @@ export default function Logo({ className }: { className?: string }) {
   return (
     <Link href="/" className={cn("flex items-center gap-2 text-xl font-bold text-primary", className)}>
       <BookMarked className="h-7 w-7" />
-      <span className="font-headline">Kitob Bozori</span>
+      <span className="font-headline">Kitobim 2.0</span>
     </Link>
   );
 }
