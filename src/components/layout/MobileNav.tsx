@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -7,7 +8,7 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 
 const navLinks = [
-  { href: '/', label: 'Bosh Sahifa', icon: Home },
+  { href: '/', label: 'Asosiy', icon: Home },
   { href: '/catalog', label: 'Katalog', icon: Compass },
   { href: '/post-book', label: 'Qo\'shish', icon: PlusCircle, protected: true },
   { href: '/my-posts', label: 'E\'lonlarim', icon: BookUser, protected: true },

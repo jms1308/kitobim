@@ -20,7 +20,7 @@ import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 
 const navLinks = [
-  { href: '/', label: "Bosh Sahifa", icon: LayoutGrid },
+  { href: '/', label: "Asosiy", icon: LayoutGrid },
   { href: '/catalog', label: "Katalog", icon: Book },
   { href: '/post-book', label: "Kitob Joylash", icon: PlusCircle },
 ];
