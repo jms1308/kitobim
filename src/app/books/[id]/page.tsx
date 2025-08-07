@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState } from 'react';
@@ -52,14 +53,16 @@ function BookDetailsSkeleton() {
 export default function BookDetailsPage({ params }: { params: { id: string } }) {
   const [book, setBook] = useState<Book | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const { id } = params;
+  const id = params.id;
   const router = useRouter();
 
   useEffect(() => {
     const fetchBook = async () => {
         setIsLoading(true);
-        const bookData = await getBookById(id);
-        setBook(bookData);
+        if (id) {
+            const bookData = await getBookById(id);
+            setBook(bookData);
+        }
         setIsLoading(false);
     }
     fetchBook();
