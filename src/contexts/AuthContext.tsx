@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { createContext, useState, useEffect, useContext } from 'react';
@@ -33,10 +34,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      setLoading(true);
       if (firebaseUser) {
-        const appUser = await getUserById(firebaseUser.uid);
-        setUser(appUser);
+        try {
+            const appUser = await getUserById(firebaseUser.uid);
+            setUser(appUser);
+        } catch (error) {
+            console.error("Failed to fetch user data:", error);
+            setUser(null);
+        }
       } else {
         setUser(null);
       }
@@ -50,12 +55,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email, pass);
-      // onAuthStateChanged will handle setting the user and loading state
+      // onAuthStateChanged will handle the rest
       return true;
     } catch (error) {
       console.error("Login error:", error);
       setUser(null);
-      setLoading(false); // Stop loading on error
+      setLoading(false);
       return false;
     }
   };
@@ -77,11 +82,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           createdAt: serverTimestamp()
       });
       // After signup, Firebase automatically signs in the user,
-      // so onAuthStateChanged will trigger.
+      // so onAuthStateChanged will trigger and set loading to false.
       return { success: true };
     } catch (error: any) {
       console.error("Signup error:", error);
-      setLoading(false); // Stop loading on error
+      setLoading(false);
       return { success: false, errorCode: error.code };
     }
   };
