@@ -13,30 +13,28 @@ const firebaseConfig = {
   messagingSenderId: '943356218150',
 };
 
+// Initialize Firebase
 let app: FirebaseApp;
-let auth: Auth;
-let db: Firestore;
-
-if (getApps().length) {
-  app = getApp();
-} else {
+if (!getApps().length) {
   app = initializeApp(firebaseConfig);
+} else {
+  app = getApp();
 }
 
-auth = getAuth(app);
-db = getFirestore(app);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
+// Enable offline persistence only on the client-side
 if (typeof window !== 'undefined') {
-    enableIndexedDbPersistence(db).catch((err) => {
-      if (err.code == 'failed-precondition') {
-        console.warn(
-          'Firebase persistence failed: multiple tabs open. Persistence might not work.'
-        );
-      } else if (err.code == 'unimplemented') {
-        console.warn('Firebase persistence not available in this browser.');
-      }
-    });
+  enableIndexedDbPersistence(db).catch((err) => {
+    if (err.code == 'failed-precondition') {
+      console.warn(
+        'Firebase persistence failed: multiple tabs open. Persistence might not work.'
+      );
+    } else if (err.code == 'unimplemented') {
+      console.warn('Firebase persistence not available in this browser.');
+    }
+  });
 }
-
 
 export { db, auth };
