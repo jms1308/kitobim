@@ -41,7 +41,7 @@ export const loginUser = async (phone: string, password: string): Promise<User |
         .from('users')
         .select('id, username, phone, createdAt')
         .eq('phone', phone)
-        .eq('password', password) // WARNING: Insecure
+        .eq('password', password)
         .single();
     
     if (error || !data) {
