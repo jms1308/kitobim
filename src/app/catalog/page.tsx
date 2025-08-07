@@ -19,10 +19,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Search, Filter as FilterIcon, X, ChevronDown } from 'lucide-react';
-import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 
-
-const ITEMS_PER_PAGE = 12;
 
 export default function CatalogPage() {
   const [allBooks, setAllBooks] = useState<Book[]>([]);
@@ -37,7 +34,6 @@ export default function CatalogPage() {
   const [priceRange, setPriceRange] = useState([0, 200000]);
   const [isFilterOpen, setIsFilterOpen] = useState(true);
   
-  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -56,7 +52,6 @@ export default function CatalogPage() {
   }, [])
 
   const filteredBooks = useMemo(() => {
-    setCurrentPage(1);
     return allBooks
       .filter(book => 
         (searchQuery === '' || 
@@ -68,24 +63,14 @@ export default function CatalogPage() {
       .filter(book => book.price >= priceRange[0] && book.price <= priceRange[1]);
   }, [allBooks, searchQuery, selectedCategory, selectedCity, priceRange]);
   
-  const totalPages = Math.ceil(filteredBooks.length / ITEMS_PER_PAGE);
-  const paginatedBooks = filteredBooks.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
   const handleResetFilters = () => {
     setSearchQuery('');
     setSelectedCategory('all');
     setSelectedCity('all');
     setPriceRange([0, 200000]);
-    setCurrentPage(1);
   };
   
-  const handlePageChange = (page: number) => {
-    if (page > 0 && page <= totalPages) {
-        setCurrentPage(page);
-        window.scrollTo(0, 0);
-    }
-  }
-
   const activeFiltersCount = [
       selectedCategory !== 'all',
       selectedCity !== 'all',
@@ -205,34 +190,13 @@ export default function CatalogPage() {
           <>
             {filteredBooks.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {paginatedBooks.map(book => <BookCard key={book.id} book={book} />)}
+                    {filteredBooks.map(book => <BookCard key={book.id} book={book} />)}
                 </div>
             ) : (
                 <div className='text-center py-16 bg-card rounded-lg'>
                     <p className='text-muted-foreground'>Filtrlarga mos kitoblar topilmadi.</p>
 
                 </div>
-            )}
-            {totalPages > 1 && (
-                 <Pagination className="mt-8">
-                    <PaginationContent>
-                        <PaginationItem>
-                            <PaginationPrevious href="#" onClick={(e) => {e.preventDefault(); handlePageChange(currentPage - 1)}} aria-disabled={currentPage === 1}/>
-                        </PaginationItem>
-                        
-                        {Array.from({length: totalPages}).map((_, i) => (
-                            <PaginationItem key={i}>
-                                <PaginationLink href="#" onClick={(e) => {e.preventDefault(); handlePageChange(i + 1)}} isActive={currentPage === i + 1}>
-                                {i + 1}
-                                </PaginationLink>
-                            </PaginationItem>
-                        ))}
-                        
-                        <PaginationItem>
-                            <PaginationNext href="#" onClick={(e) => {e.preventDefault(); handlePageChange(currentPage + 1)}} aria-disabled={currentPage === totalPages}/>
-                        </PaginationItem>
-                    </PaginationContent>
-                </Pagination>
             )}
           </>
         )}
