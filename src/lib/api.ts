@@ -174,6 +174,28 @@ export const getBookById = async (id: string): Promise<Book | null> => {
     } as Book;
 };
 
+export const uploadBookImage = async (file: File): Promise<string | null> => {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Math.random()}-${Date.now()}.${fileExt}`;
+    const filePath = `public/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+        .from('book-images')
+        .upload(filePath, file);
+    
+    if (uploadError) {
+        console.error('Error uploading image:', uploadError);
+        return null;
+    }
+
+    const { data } = supabase.storage
+        .from('book-images')
+        .getPublicUrl(filePath);
+
+    return data.publicUrl;
+};
+
+
 export const addBook = async (bookData: Omit<Book, 'id' | 'createdAt' | 'sellerContact'>): Promise<Book | null> => {
     const { sellerId, title, author, description, price, condition, category, city, imageUrl } = bookData;
 
@@ -185,6 +207,7 @@ export const addBook = async (bookData: Omit<Book, 'id' | 'createdAt' | 'sellerC
 
     if (userError || !userData) {
         console.error('Error fetching seller for contact info:', userError);
+        // Fallback or handle error appropriately
         return null;
     }
 

@@ -19,13 +19,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import AuthGuard from '@/components/AuthGuard';
 import { useAuth } from '@/contexts/AuthContext';
-import { addBook } from '@/lib/api';
+import { addBook, uploadBookImage } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
-import { Loader2, Upload, CheckCircle2, AlertCircle, ExternalLink } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { Loader2, Upload, CheckCircle2, AlertCircle, Camera } from 'lucide-react';
 import Image from 'next/image';
-import Link from 'next/link';
+
+const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
+const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+
 
 const formSchema = z.object({
   title: z.string().min(3, { message: "Sarlavha kamida 3 belgidan iborat bo'lishi kerak." }),
@@ -35,10 +38,13 @@ const formSchema = z.object({
   category: z.string().min(1, { message: "Kategoriyani tanlang." }),
   city: z.string().min(1, { message: "Shaharni tanlang." }),
   description: z.string().min(20, { message: "Tavsif kamida 20 belgidan iborat bo'lishi kerak." }),
-  imageUrl: z.string().url({ message: "To'g'ri URL manzil kiriting." }).refine(
-    (url) => /\.(jpg|jpeg|png|webp|gif)$/i.test(url),
-    { message: "Iltimos, rasmga to'g'ridan-to'g'ri havolani (Direct Link) joylang. Havola .png yoki .jpg bilan tugashi kerak." }
-  ),
+  image: z
+    .instanceof(File, { message: "Iltimos, rasm faylini tanlang." })
+    .refine((file) => file.size <= MAX_FILE_SIZE, `Rasm hajmi 2MB dan oshmasligi kerak.`)
+    .refine(
+      (file) => ACCEPTED_IMAGE_TYPES.includes(file.type),
+      "Faqat .jpg, .jpeg, .png va .webp formatidagi rasmlar qabul qilinadi."
+    ),
 });
 
 const categories = ["Badiiy adabiyot", "Tarixiy roman", "Bolalar adabiyoti", "Ilmiy", "Darslik", "Boshqa"];
@@ -50,6 +56,8 @@ function PostBookPageContent() {
   const { toast } = useToast();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -58,13 +66,20 @@ function PostBookPageContent() {
       author: '',
       price: 0,
       description: '',
-      imageUrl: '',
     },
   });
-  
-  const imageUrlValue = form.watch("imageUrl");
-  const isImageUrlValid = !form.getFieldState('imageUrl').error && /\.(jpg|jpeg|png|webp|gif)$/i.test(imageUrlValue);
 
+  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      form.setValue('image', file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (!user) {
@@ -73,7 +88,17 @@ function PostBookPageContent() {
     }
     setIsLoading(true);
     try {
-        const newBook = await addBook({ ...values, sellerId: user.id });
+        const imageUrl = await uploadBookImage(values.image);
+        if (!imageUrl) {
+            throw new Error("Rasm yuklashda xatolik yuz berdi.");
+        }
+
+        const newBook = await addBook({ 
+            ...values,
+            imageUrl,
+            sellerId: user.id 
+        });
+
         if (newBook) {
             toast({
               title: (
@@ -83,7 +108,7 @@ function PostBookPageContent() {
               ),
               description: "Sizning e'loningiz joylashtirildi.",
             });
-            router.push(`/catalog`);
+            router.push(`/my-posts`);
         } else {
              toast({ 
                 variant: 'destructive', 
@@ -95,7 +120,7 @@ function PostBookPageContent() {
                 description: "E'lonni joylashtirishda xato yuz berdi." 
             });
         }
-    } catch (error) {
+    } catch (error: any) {
         toast({ 
             variant: 'destructive',
             title: (
@@ -103,7 +128,7 @@ function PostBookPageContent() {
                   <AlertCircle className="h-5 w-5" /> Xatolik!
                 </div>
             ),
-            description: "E'lonni joylashtirishda xato yuz berdi." 
+            description: error.message || "E'lonni joylashtirishda noma'lum xato yuz berdi." 
         });
     } finally {
         setIsLoading(false);
@@ -208,18 +233,24 @@ function PostBookPageContent() {
                 <div className="space-y-6">
                     <FormField
                       control={form.control}
-                      name="imageUrl"
-                      render={({ field }) => (
+                      name="image"
+                      render={() => (
                           <FormItem>
-                          <FormLabel>Rasm URL manzili</FormLabel>
-                            <FormControl><Input placeholder="https://i.postimg.cc/rasm.png" {...field} /></FormControl>
-                            <Button asChild variant="link" size="sm" className="p-0 h-auto">
-                                <Link href="https://postimages.org/" target="_blank" rel="noopener noreferrer">
-                                    Rasm yuklash va link olish (Direct Link)
-                                    <ExternalLink className="ml-1.5 h-4 w-4" />
-                                </Link>
-                            </Button>
-                          <FormMessage />
+                            <FormLabel>Kitob rasmi</FormLabel>
+                            <FormControl>
+                                <Button type="button" variant="outline" className="w-full" onClick={() => fileInputRef.current?.click()}>
+                                    <Camera className="mr-2 h-4 w-4" />
+                                    Rasm tanlash
+                                </Button>
+                            </FormControl>
+                            <Input 
+                                type="file" 
+                                ref={fileInputRef}
+                                className="hidden" 
+                                onChange={handleImageChange}
+                                accept={ACCEPTED_IMAGE_TYPES.join(",")}
+                            />
+                            <FormMessage />
                           </FormItem>
                       )}
                     />
@@ -235,14 +266,14 @@ function PostBookPageContent() {
                     )}
                     />
                 </div>
-                 <div className="flex flex-col items-center justify-center h-full bg-muted/50 rounded-lg p-4">
-                    <FormLabel className="mb-2">Rasm ko'rinishi</FormLabel>
-                    {isImageUrlValid ? (
-                      <Image src={imageUrlValue} alt="Kitob rasmi" width={200} height={300} className="rounded-md object-cover" data-ai-hint="book cover" />
+                 <div className="flex flex-col items-center justify-center h-full bg-muted/50 rounded-lg p-4 min-h-[220px]">
+                    <FormLabel className="mb-2 self-start">Rasm ko'rinishi</FormLabel>
+                    {imagePreview ? (
+                      <Image src={imagePreview} alt="Kitob rasmi" width={200} height={300} className="rounded-md object-contain max-h-[250px]" data-ai-hint="book cover" />
                     ) : (
-                    <div className="w-full h-48 flex flex-col items-center justify-center text-muted-foreground border-2 border-dashed rounded-lg">
+                    <div className="w-full flex-grow flex flex-col items-center justify-center text-muted-foreground border-2 border-dashed rounded-lg">
                         <Upload className="h-10 w-10 mb-2" />
-                        <p>Rasm URL manzilini kiriting</p>
+                        <p className="text-center">Rasm tanlanmagan</p>
                     </div>
                     )}
                 </div>
