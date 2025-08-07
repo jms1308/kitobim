@@ -1,11 +1,12 @@
+
 "use client";
 
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import type { User as AppUser } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
-import { getUserProfile } from '@/lib/api';
-import type { AuthChangeEvent, Session } from '@supabase/supabase-js';
+import { getUserProfile, getUserByPhone } from '@/lib/api';
+import type { AuthChangeEvent, Session, User } from '@supabase/supabase-js';
 
 interface AuthContextType {
   user: AppUser | null;
@@ -37,8 +38,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const { data: authListener } = supabase.auth.onAuthStateChange(handleAuthChange);
     
-    // Check initial session
     const checkInitialSession = async () => {
+      setLoading(true);
       const { data: { session } } = await supabase.auth.getSession();
       if (session && session.user) {
         const profile = await getUserProfile(session.user.id);
@@ -55,13 +56,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   
   const signIn = async (phone: string, password: string) => {
       setLoading(true);
-      // We use a dummy email for password sign-in as Supabase requires it
-      const dummyEmail = `${phone}@book-bozori.com`;
-
+      
+      const { data: authUser, error: userError } = await supabase
+        .from('profiles')
+        .select('email')
+        .eq('phone', phone)
+        .single();
+        
+      if (userError || !authUser) {
+          setLoading(false);
+          return { success: false, error: "Telefon raqam yoki parol xato." };
+      }
+      
       const { error } = await supabase.auth.signInWithPassword({
-        email: dummyEmail,
+        email: authUser.email as string,
         password: password,
       });
+
       setLoading(false);
 
       if (error) {
@@ -73,14 +84,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signup = async (username: string, phone: string, password: string) => {
     setLoading(true);
     
-    // Check if phone number is already taken in the profiles table
     const { data: existingProfile, error: profileError } = await supabase
         .from('profiles')
         .select('phone')
         .eq('phone', phone)
         .single();
         
-    if (profileError && profileError.code !== 'PGRST116') { // PGRST116 means no rows found, which is good
+    if (profileError && profileError.code !== 'PGRST116') {
         setLoading(false);
         return { success: false, error: "Tekshirishda xatolik: " + profileError.message };
     }
@@ -90,7 +100,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { success: false, error: "Bu telefon raqami allaqachon ro'yxatdan o'tgan." };
     }
 
-    // Since Supabase requires an email for sign-up, we'll create a dummy one
     const dummyEmail = `${phone}@book-bozori.com`;
 
     const { data, error } = await supabase.auth.signUp({
@@ -99,7 +108,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         options: {
             data: {
                 username: username,
-                phone: phone, // Pass phone and username to be inserted by the trigger
+                phone: phone,
             }
         }
     });
