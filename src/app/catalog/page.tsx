@@ -1,7 +1,8 @@
 
 "use client";
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { getBooks, getCategories, getCities } from '@/lib/api';
 import type { Book } from '@/lib/types';
 import BookCard from '@/components/BookCard';
@@ -22,18 +23,54 @@ import { Search, Filter as FilterIcon, X, ChevronDown } from 'lucide-react';
 
 
 export default function CatalogPage() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
   const [allBooks, setAllBooks] = useState<Book[]>([]);
   const [categories, setCategories] = useState<string[]>(['Barcha kategoriyalar']);
   const [cities, setCities] = useState<string[]>(['Barcha shaharlar']);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Filter states
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [selectedCity, setSelectedCity] = useState('all');
-  const [priceRange, setPriceRange] = useState([0, 200000]);
+  // Filter states initialized from URL search params
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
+  const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
+  const [selectedCity, setSelectedCity] = useState(searchParams.get('city') || 'all');
+  const [priceRange, setPriceRange] = useState<[number, number]>(() => {
+    const min = searchParams.get('min_price');
+    const max = searchParams.get('max_price');
+    return [min ? parseInt(min, 10) : 0, max ? parseInt(max, 10) : 200000];
+  });
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+
+  const createQueryString = useCallback(
+    (params: Record<string, string | number | undefined>) => {
+      const newSearchParams = new URLSearchParams(searchParams.toString());
+      for (const [key, value] of Object.entries(params)) {
+        if (value === undefined || value === '' || (key !== 'q' && value === 'all')) {
+          newSearchParams.delete(key);
+        } else {
+          newSearchParams.set(key, String(value));
+        }
+      }
+      return newSearchParams.toString();
+    },
+    [searchParams]
+  );
   
+  useEffect(() => {
+    const params = {
+      q: searchQuery || undefined,
+      category: selectedCategory === 'all' ? undefined : selectedCategory,
+      city: selectedCity === 'all' ? undefined : selectedCity,
+      min_price: priceRange[0] === 0 ? undefined : priceRange[0],
+      max_price: priceRange[1] === 200000 ? undefined : priceRange[1],
+    };
+    
+    const queryString = createQueryString(params);
+    router.push(`${pathname}?${queryString}`, { scroll: false });
+  }, [searchQuery, selectedCategory, selectedCity, priceRange, pathname, router, createQueryString]);
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -85,9 +122,9 @@ export default function CatalogPage() {
           <Collapsible open={isFilterOpen} onOpenChange={setIsFilterOpen} className="md:hidden">
              <div className="flex justify-between items-center p-4 border rounded-lg bg-card">
                 <CollapsibleTrigger asChild>
-                  <div className="w-full text-left">
-                      <h3 className="text-xl font-bold flex items-center gap-2">
-                          <FilterIcon className="h-5 w-5" />
+                  <div className="w-full text-left flex items-center gap-2" role="button">
+                      <FilterIcon className="h-5 w-5" />
+                      <h3 className="text-xl font-bold">
                           Filtrlar
                           {activeFiltersCount > 0 && (
                               <Badge variant="secondary" className="ml-2">{activeFiltersCount}</Badge>
@@ -140,7 +177,7 @@ export default function CatalogPage() {
                             max={200000}
                             step={5000}
                             value={priceRange}
-                            onValueChange={(value) => setPriceRange(value)}
+                            onValueChange={(value) => setPriceRange(value as [number, number])}
                         />
                         <div className="flex justify-between text-xs text-muted-foreground mt-2">
                             <span>{new Intl.NumberFormat('uz-UZ').format(priceRange[0])} so'm</span>
@@ -194,7 +231,7 @@ export default function CatalogPage() {
                         max={200000}
                         step={5000}
                         value={priceRange}
-                        onValueChange={(value) => setPriceRange(value)}
+                        onValueChange={(value) => setPriceRange(value as [number, number])}
                     />
                     <div className="flex justify-between text-xs text-muted-foreground mt-2">
                         <span>{new Intl.NumberFormat('uz-UZ').format(priceRange[0])} so'm</span>
