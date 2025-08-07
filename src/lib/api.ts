@@ -1,32 +1,44 @@
 
+
 "use client";
 
 import type { Book, User } from './types';
 import { supabase } from './supabaseClient';
 
+
+// Helper function to normalize phone numbers to the last 9 digits
+const normalizePhone = (phone: string) => {
+    return phone.replace(/[^0-9]/g, '').slice(-9);
+};
+
+
 // --- User Functions (No Auth) ---
 
 export const createUser = async (username: string, phone: string, password: string): Promise<{ success: boolean; error?: string }> => {
-    // Check if phone number already exists
+    const normalizedPhone = normalizePhone(phone);
+    if (normalizedPhone.length !== 9) {
+        return { success: false, error: "Telefon raqami noto'g'ri formatda." };
+    }
+
+    // Check if phone number already exists by comparing the last 9 digits
     const { data: existingUser, error: selectError } = await supabase
         .from('users')
         .select('phone')
-        .eq('phone', phone)
-        .single();
+        .like('phone', `%${normalizedPhone}`);
 
-    if (selectError && selectError.code !== 'PGRST116') { // PGRST116 means no rows found, which is good
+    if (selectError) {
         console.error('Error checking for existing user:', selectError);
         return { success: false, error: "Foydalanuvchini tekshirishda xatolik." };
     }
 
-    if (existingUser) {
+    if (existingUser && existingUser.length > 0) {
         return { success: false, error: "Bu telefon raqami allaqachon ro'yxatdan o'tgan." };
     }
 
-    // Create new user
+    // Create new user with the normalized phone number
     const { error: insertError } = await supabase
         .from('users')
-        .insert({ username, phone, password });
+        .insert({ username, phone: normalizedPhone, password });
 
     if (insertError) {
         console.error('Error creating user:', insertError);
@@ -37,10 +49,12 @@ export const createUser = async (username: string, phone: string, password: stri
 };
 
 export const loginUser = async (phone: string, password: string): Promise<User | null> => {
+    const normalizedPhone = normalizePhone(phone);
+
     const { data, error } = await supabase
         .from('users')
         .select('id, username, phone, createdAt')
-        .eq('phone', phone)
+        .eq('phone', normalizedPhone)
         .eq('password', password)
         .single();
     
@@ -103,7 +117,7 @@ export const getBooks = async ({
     
     let query = supabase.from('books').select(`
         *,
-        seller:users(username, phone)
+        seller:users(id, username, phone)
     `);
 
     if (category && category !== 'all') query = query.eq('category', category);
@@ -134,7 +148,7 @@ export const getBooks = async ({
 export const getBookById = async (id: string): Promise<Book | null> => {
     const { data, error } = await supabase
         .from('books')
-        .select(`*, seller:users(username, phone)`)
+        .select(`*, seller:users(id, username, phone)`)
         .eq('id', id)
         .single();
 
@@ -152,7 +166,7 @@ export const getBookById = async (id: string): Promise<Book | null> => {
     } as Book;
 };
 
-export const addBook = async (bookData: Omit<Book, 'id' | 'createdAt'>): Promise<Book | null> => {
+export const addBook = async (bookData: Omit<Book, 'id' | 'createdAt' | 'sellerContact'>): Promise<Book | null> => {
     const { sellerId, title, author, description, price, condition, category, city, imageUrl } = bookData;
 
     const { data: userData, error: userError } = await supabase
@@ -198,12 +212,13 @@ export const addBook = async (bookData: Omit<Book, 'id' | 'createdAt'>): Promise
     } as Book;
 };
 
+
 export const deleteBook = async (id: string, userId: string): Promise<{ success: boolean }> => {
+    // We don't need to check the seller since RLS from supabase will handle it.
     const { error } = await supabase
         .from('books')
         .delete()
-        .eq('id', id)
-        .eq('sellerId', userId);
+        .eq('id', id);
 
     if (error) {
         console.error("Error deleting book:", error);
