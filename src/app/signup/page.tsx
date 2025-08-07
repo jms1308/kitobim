@@ -24,6 +24,7 @@ import { Loader2 } from 'lucide-react';
 const formSchema = z.object({
   username: z.string().min(3, { message: "Foydalanuvchi nomi kamida 3 belgidan iborat bo'lishi kerak." }),
   phone: z.string().min(9, { message: "Telefon raqamini to'g'ri kiriting (+998...)." }),
+  password: z.string().min(6, { message: "Parol kamida 6 belgidan iborat bo'lishi kerak." }),
 });
 
 export default function SignupPage() {
@@ -37,12 +38,13 @@ export default function SignupPage() {
     defaultValues: {
       username: '',
       phone: '',
+      password: '',
     },
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
-    const { success, error } = await signup(values.username, values.phone);
+    const { success, error } = await signup(values.username, values.phone, values.password);
     if (success) {
       toast({
         title: "Muvaffaqiyatli!",
@@ -90,6 +92,19 @@ export default function SignupPage() {
                     <FormLabel>Telefon raqami</FormLabel>
                     <FormControl>
                       <Input placeholder="+998901234567" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Parol</FormLabel>
+                    <FormControl>
+                      <Input type="password" placeholder="******" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

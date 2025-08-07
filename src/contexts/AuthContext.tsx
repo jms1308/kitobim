@@ -4,16 +4,15 @@ import React, { createContext, useState, useEffect, useContext } from 'react';
 import type { User as AppUser } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
-import { getUserProfile, getUserByPhone } from '@/lib/api';
+import { getUserProfile } from '@/lib/api';
 import type { AuthChangeEvent, Session } from '@supabase/supabase-js';
 
 interface AuthContextType {
   user: AppUser | null;
   isAuthenticated: boolean;
   loading: boolean;
-  signInWithOtp: (phone: string) => Promise<{ success: boolean; error?: string }>;
-  verifyOtp: (phone: string, token: string) => Promise<{ success: boolean; error?: string }>;
-  signup: (username: string, phone: string) => Promise<{ success: boolean; error?: string }>;
+  signIn: (phone: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  signup: (username: string, phone: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
 }
 
@@ -24,74 +23,83 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event: AuthChangeEvent, session: Session | null) => {
-        setLoading(true);
-        if (session && session.user) {
-          const profile = await getUserProfile(session.user.id);
-          setUser(profile);
-        } else {
-          setUser(null);
-        }
-        setLoading(false);
-      }
-    );
-    
-    const checkInitialSession = async () => {
-        const { data: { session } } = await supabase.auth.getSession();
-         if (session && session.user) {
-          const profile = await getUserProfile(session.user.id);
-          setUser(profile);
-        }
-        setLoading(false);
+  const handleAuthChange = async (event: AuthChangeEvent, session: Session | null) => {
+    setLoading(true);
+    if (session && session.user) {
+      const profile = await getUserProfile(session.user.id);
+      setUser(profile);
+    } else {
+      setUser(null);
     }
+    setLoading(false);
+  };
+  
+  useEffect(() => {
+    const { data: authListener } = supabase.auth.onAuthStateChange(handleAuthChange);
+    
+    // Check initial session
+    const checkInitialSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session && session.user) {
+        const profile = await getUserProfile(session.user.id);
+        setUser(profile);
+      }
+      setLoading(false);
+    };
     checkInitialSession();
 
     return () => {
-      subscription.unsubscribe();
+      authListener.subscription.unsubscribe();
     };
   }, []);
-
-  const signInWithOtp = async (phone: string) => {
-    setLoading(true);
-    const { error } = await supabase.auth.signInWithOtp({ phone });
-    setLoading(false);
-
-    if (error) {
-      if (error.message.includes('User not found')) {
-        return { success: false, error: "Bu raqam ro'yxatdan o'tmagan." };
-      }
-      return { success: false, error: "Kod yuborishda xatolik: " + error.message };
-    }
-    return { success: true };
-  };
   
-  const verifyOtp = async (phone: string, token: string) => {
-    setLoading(true);
-    const { data, error } = await supabase.auth.verifyOtp({ phone, token, type: 'sms' });
-    setLoading(false);
+  const signIn = async (phone: string, password: string) => {
+      setLoading(true);
+      // We use a dummy email for password sign-in as Supabase requires it
+      const dummyEmail = `${phone}@book-bozori.com`;
 
-    if (error) {
-        return { success: false, error: "Kod noto'g'ri yoki muddati o'tgan." };
-    }
-    return { success: true };
+      const { error } = await supabase.auth.signInWithPassword({
+        email: dummyEmail,
+        password: password,
+      });
+      setLoading(false);
+
+      if (error) {
+        return { success: false, error: "Telefon raqam yoki parol xato." };
+      }
+      return { success: true };
   };
 
-  const signup = async (username: string, phone: string) => {
+  const signup = async (username: string, phone: string, password: string) => {
     setLoading(true);
-    // Dummy email and password, as they are required but we won't use them.
+    
+    // Check if phone number is already taken in the profiles table
+    const { data: existingProfile, error: profileError } = await supabase
+        .from('profiles')
+        .select('phone')
+        .eq('phone', phone)
+        .single();
+        
+    if (profileError && profileError.code !== 'PGRST116') { // PGRST116 means no rows found, which is good
+        setLoading(false);
+        return { success: false, error: "Tekshirishda xatolik: " + profileError.message };
+    }
+
+    if (existingProfile) {
+        setLoading(false);
+        return { success: false, error: "Bu telefon raqami allaqachon ro'yxatdan o'tgan." };
+    }
+
+    // Since Supabase requires an email for sign-up, we'll create a dummy one
     const dummyEmail = `${phone}@book-bozori.com`;
-    const dummyPassword = Math.random().toString(36).slice(-8);
 
     const { data, error } = await supabase.auth.signUp({
-        email: dummyEmail, // Supabase requires email for phone auth signup flow
-        password: dummyPassword, 
-        phone: phone,
+        email: dummyEmail,
+        password: password,
         options: {
             data: {
                 username: username,
-                phone: phone,
+                phone: phone, // Pass phone and username to be inserted by the trigger
             }
         }
     });
@@ -99,13 +107,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setLoading(false);
 
     if (error) {
-        if (error.message.includes('User already registered') || error.message.includes('unique constraint')) {
-            return { success: false, error: "Bu telefon raqami yoki foydalanuvchi nomi allaqachon ro'yxatdan o'tgan." };
+        if (error.message.includes('User already registered')) {
+            return { success: false, error: "Bu telefon raqami allaqachon ro'yxatdan o'tgan." };
         }
         return { success: false, error: error.message };
     }
     
-    // We don't log in automatically. User must verify OTP via login page after signup.
     return { success: true };
   };
 
@@ -119,8 +126,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user,
     isAuthenticated: !loading && !!user,
     loading,
-    signInWithOtp,
-    verifyOtp,
+    signIn,
     signup,
     logout,
   };
