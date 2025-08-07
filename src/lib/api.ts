@@ -125,7 +125,7 @@ export const getBooks = async ({
     
     let query = supabase.from('books').select(`
         *,
-        seller:users(id, username, phone)
+        seller:users!left(id, username, phone)
     `);
 
     if (category && category !== 'all') query = query.eq('category', category);
@@ -156,7 +156,7 @@ export const getBooks = async ({
 export const getBookById = async (id: string): Promise<Book | null> => {
     const { data, error } = await supabase
         .from('books')
-        .select(`*, seller:users(id, username, phone)`)
+        .select(`*, seller:users!left(id, username, phone)`)
         .eq('id', id)
         .single();
 
@@ -254,4 +254,3 @@ export const getCities = async (): Promise<string[]> => {
     const cities = new Set(data.map(doc => doc.city as string));
     return Array.from(cities);
 }
-
