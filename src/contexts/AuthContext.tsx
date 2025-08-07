@@ -48,13 +48,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (email: string, pass: string): Promise<boolean> => {
     setLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, email, pass);
-      // The onAuthStateChanged listener will handle setting the user and loading state.
+      const userCredential = await signInWithEmailAndPassword(auth, email, pass);
+      const appUser = await getUserById(userCredential.user.uid);
+      setUser(appUser);
+      // Let onAuthStateChanged handle loading state for consistency
       return true;
     } catch (error) {
       console.error("Login error:", error);
-      setLoading(false); // Set loading to false on error
+      setUser(null);
       return false;
+    } finally {
+        setLoading(false);
     }
   };
 
@@ -67,7 +71,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const newUser: Omit<AppUser, 'id'> = {
         username,
         email,
-        createdAt: new Date().toISOString() // This will be replaced by server timestamp
+        createdAt: new Date().toISOString()
       };
 
       await setDoc(doc(db, "users", firebaseUser.uid), {
@@ -75,12 +79,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           createdAt: serverTimestamp()
       });
 
-      // The onAuthStateChanged listener will handle setting the user state.
       return { success: true };
     } catch (error: any) {
       console.error("Signup error:", error);
-      setLoading(false);
       return { success: false, errorCode: error.code };
+    } finally {
+        setLoading(false);
     }
   };
 
@@ -96,7 +100,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const value = {
     user,
-    isAuthenticated: !!user, // Simplified this
+    isAuthenticated: !!user,
     loading,
     login,
     signup,
