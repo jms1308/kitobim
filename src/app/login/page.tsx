@@ -22,7 +22,7 @@ import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
 
 const formSchema = z.object({
-  email: z.string().email({ message: "To'g'ri email manzil kiriting." }),
+  email: z.string().min(1, { message: "Email yoki telefon raqamini kiriting." }),
   password: z.string().min(6, { message: "Parol kamida 6 belgidan iborat bo'lishi kerak." }),
 });
 
@@ -83,9 +83,9 @@ export default function LoginPage() {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel>Email yoki Telefon raqami</FormLabel>
                     <FormControl>
-                      <Input placeholder="siz@example.com" {...field} />
+                      <Input placeholder="siz@example.com yoki +998..." {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

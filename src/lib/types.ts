@@ -23,6 +23,7 @@ export interface User {
   id: string;
   username: string;
   email: string | undefined;
+  phone?: string | undefined;
   createdAt: string;
   postsCount: number;
 }

@@ -24,6 +24,7 @@ import { Loader2 } from 'lucide-react';
 const formSchema = z.object({
   username: z.string().min(3, { message: "Foydalanuvchi nomi kamida 3 belgidan iborat bo'lishi kerak." }),
   email: z.string().email({ message: "To'g'ri email manzil kiriting." }),
+  phone: z.string().min(9, { message: "Telefon raqamini to'g'ri kiriting." }).optional().or(z.literal('')),
   password: z.string().min(6, { message: "Parol kamida 6 belgidan iborat bo'lishi kerak." }),
 });
 
@@ -38,34 +39,26 @@ export default function SignupPage() {
     defaultValues: {
       username: '',
       email: '',
+      phone: '',
       password: '',
     },
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
-    const { success, error } = await signup(values.username, values.email, values.password);
+    const { success, error } = await signup(values.username, values.email, values.password, values.phone);
     if (success) {
       toast({
-        title: "Deyarli tayyor!",
-        description: "Hisobingizni tasdiqlash uchun emailingizga yuborilgan havolani bosing.",
+        title: "Muvaffaqiyatli!",
+        description: "Hisobingiz yaratildi va tizimga kirdingiz.",
       });
-      // Don't redirect, user needs to confirm email.
-      // The onAuthStateChange listener will handle the redirect after confirmation.
+      router.push('/profile');
     } else {
-        if (error && error.includes("User already registered")) {
-            toast({
-              variant: "destructive",
-              title: "Xatolik!",
-              description: "Bu email manzili allaqachon ro'yxatdan o'tgan.",
-            });
-        } else {
-             toast({
-              variant: "destructive",
-              title: "Xatolik!",
-              description: error || "Ro'yxatdan o'tishda xatolik yuz berdi. Iltimos, qayta urinib ko'ring.",
-            });
-        }
+        toast({
+          variant: "destructive",
+          title: "Xatolik!",
+          description: error || "Ro'yxatdan o'tishda xatolik yuz berdi. Iltimos, qayta urinib ko'ring.",
+        });
     }
     setIsSubmitting(false);
   }
@@ -101,6 +94,19 @@ export default function SignupPage() {
                     <FormLabel>Email</FormLabel>
                     <FormControl>
                       <Input placeholder="siz@example.com" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="phone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Telefon raqami (Ixtiyoriy)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="+998901234567" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

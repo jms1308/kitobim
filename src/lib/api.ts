@@ -63,7 +63,7 @@ export const getBooks = async ({
         ...item,
         sellerContact: {
             name: (item.seller as any)?.username || 'Noma\'lum',
-            phone: '+998 XX XXX XX XX' // This can be enhanced later
+            phone: (item.seller as any)?.phone || 'Noma\'lum'
         }
     })) as Book[];
 };
@@ -82,12 +82,13 @@ export const getBookById = async (id: string): Promise<Book | null> => {
         console.error('Error fetching book by id:', error);
         return null;
     }
+     if (!data) return null;
 
     return {
         ...data,
         sellerContact: {
             name: (data.seller as any)?.username || 'Noma\'lum',
-            phone: (data.seller as any)?.phone || '+998 XX XXX XX XX'
+            phone: (data.seller as any)?.phone || 'Noma\'lum'
         }
     } as Book;
 };
@@ -167,14 +168,31 @@ export const getUserProfile = async (id: string): Promise<User | null> => {
 
     if (countError) {
         console.error('Error fetching posts count:', countError);
-        // Continue without count if it fails
     }
+    
+    if (!profile) return null;
 
     return {
         id: profile.id,
         username: profile.username,
         email: profile.email,
+        phone: profile.phone,
         createdAt: profile.created_at,
         postsCount: count || 0,
     };
+}
+
+export const getUserByPhone = async (phone: string): Promise<User | null> => {
+    const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('phone', phone)
+        .single();
+    
+    if (error || !data) {
+        console.error('Error fetching user by phone:', error);
+        return null;
+    }
+
+    return data as User;
 }
