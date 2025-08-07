@@ -35,7 +35,10 @@ const formSchema = z.object({
   category: z.string().min(1, { message: "Kategoriyani tanlang." }),
   city: z.string().min(1, { message: "Shaharni tanlang." }),
   description: z.string().min(20, { message: "Tavsif kamida 20 belgidan iborat bo'lishi kerak." }),
-  imageUrl: z.string().url({ message: "To'g'ri rasm URL manzilini kiriting." }),
+  imageUrl: z.string().url({ message: "To'g'ri URL manzil kiriting." }).refine(
+    (url) => /\.(jpg|jpeg|png|webp|gif)$/i.test(url),
+    { message: "Iltimos, rasmga to'g'ridan-to'g'ri havolani (Direct Link) joylang. Havola .png yoki .jpg bilan tugashi kerak." }
+  ),
 });
 
 const categories = ["Badiiy adabiyot", "Tarixiy roman", "Bolalar adabiyoti", "Ilmiy", "Darslik", "Boshqa"];
@@ -60,6 +63,8 @@ function PostBookPageContent() {
   });
   
   const imageUrlValue = form.watch("imageUrl");
+  const isImageUrlValid = !form.getFieldState('imageUrl').error && /\.(jpg|jpeg|png|webp|gif)$/i.test(imageUrlValue);
+
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (!user) {
@@ -207,10 +212,10 @@ function PostBookPageContent() {
                       render={({ field }) => (
                           <FormItem>
                           <FormLabel>Rasm URL manzili</FormLabel>
-                            <FormControl><Input placeholder="https://example.com/rasm.png" {...field} /></FormControl>
+                            <FormControl><Input placeholder="https://i.postimg.cc/rasm.png" {...field} /></FormControl>
                             <Button asChild variant="link" size="sm" className="p-0 h-auto">
                                 <Link href="https://postimages.org/" target="_blank" rel="noopener noreferrer">
-                                    Rasm yuklash va link olish
+                                    Rasm yuklash va link olish (Direct Link)
                                     <ExternalLink className="ml-1.5 h-4 w-4" />
                                 </Link>
                             </Button>
@@ -232,8 +237,8 @@ function PostBookPageContent() {
                 </div>
                  <div className="flex flex-col items-center justify-center h-full bg-muted/50 rounded-lg p-4">
                     <FormLabel className="mb-2">Rasm ko'rinishi</FormLabel>
-                    {imageUrlValue ? (
-                    <Image src={imageUrlValue} alt="Kitob rasmi" width={200} height={300} className="rounded-md object-cover" />
+                    {isImageUrlValid ? (
+                      <Image src={imageUrlValue} alt="Kitob rasmi" width={200} height={300} className="rounded-md object-cover" data-ai-hint="book cover" />
                     ) : (
                     <div className="w-full h-48 flex flex-col items-center justify-center text-muted-foreground border-2 border-dashed rounded-lg">
                         <Upload className="h-10 w-10 mb-2" />
