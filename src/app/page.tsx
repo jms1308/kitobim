@@ -25,7 +25,14 @@ export default function HomePage() {
   }, []);
 
   const filteredBooks = useMemo(() => {
-    const recentBooks = [...books].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    const getBookDate = (book: Book) => {
+        if (typeof book.createdAt === 'string') {
+            return new Date(book.createdAt);
+        }
+        return book.createdAt;
+    }
+    const recentBooks = [...books].sort((a, b) => getBookDate(b).getTime() - getBookDate(a).getTime());
+    
     if (!searchQuery) {
       return recentBooks.slice(0, 8);
     }

@@ -12,7 +12,7 @@ export interface Book {
   category: string;
   city: string;
   imageUrl: string;
-  createdAt: string | Timestamp;
+  createdAt: string | Date | Timestamp;
   sellerId: string;
   sellerContact?: {
     name: string;
@@ -24,6 +24,6 @@ export interface User {
   id: string;
   username: string;
   email: string;
-  createdAt: string | Timestamp;
+  createdAt: string | Date | Timestamp;
   postsCount: number;
 }

@@ -18,7 +18,6 @@ import {
 import { Phone, User, MapPin, Tag, BookOpen, ThumbsUp, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
 import { uz } from 'date-fns/locale';
-import { Timestamp } from 'firebase/firestore';
 
 export default function BookDetailsPage({ params }: { params: { id: string } }) {
   const [book, setBook] = useState<Book | null>(null);
@@ -51,10 +50,10 @@ export default function BookDetailsPage({ params }: { params: { id: string } }) 
   } as const;
 
   const getBookDate = () => {
-      if (book.createdAt instanceof Timestamp) {
-          return book.createdAt.toDate();
+      if (typeof book.createdAt === 'string') {
+        return new Date(book.createdAt);
       }
-      return new Date(book.createdAt);
+      return book.createdAt;
   }
 
   return (

@@ -7,7 +7,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Loader2, Mail, Calendar, Book as BookIcon } from 'lucide-react';
 import { format } from 'date-fns';
-import { Timestamp } from 'firebase/firestore';
 
 function ProfilePageContent() {
   const { user, logout, loading } = useAuth();
@@ -23,12 +22,12 @@ function ProfilePageContent() {
   if (!user) {
     return null; // AuthGuard handles redirection
   }
-
+  
   const getJoinDate = () => {
-      if (user.createdAt instanceof Timestamp) {
-          return user.createdAt.toDate();
-      }
+    if (typeof user.createdAt === 'string') {
       return new Date(user.createdAt);
+    }
+    return user.createdAt;
   }
 
   return (

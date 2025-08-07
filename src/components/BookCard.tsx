@@ -6,7 +6,6 @@ import type { Book } from '@/lib/types';
 import { MapPin, CalendarDays } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { uz } from 'date-fns/locale';
-import { Timestamp } from 'firebase/firestore';
 
 interface BookCardProps {
   book: Book;
@@ -20,10 +19,10 @@ export default function BookCard({ book }: BookCardProps) {
   } as const;
 
   const getBookDate = () => {
-      if (book.createdAt instanceof Timestamp) {
-          return book.createdAt.toDate();
+      if (typeof book.createdAt === 'string') {
+        return new Date(book.createdAt);
       }
-      return new Date(book.createdAt);
+      return book.createdAt;
   }
 
   return (

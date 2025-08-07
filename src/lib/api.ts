@@ -1,14 +1,19 @@
-import { db, auth } from './firebase';
-import { collection, getDocs, doc, getDoc, addDoc, deleteDoc, query, where, orderBy, serverTimestamp, Timestamp, collectionGroup } from 'firebase/firestore';
 import type { Book, User } from './types';
+import { mockBooks, mockUsers } from './mock-data';
+import { Timestamp } from 'firebase/firestore';
 
-const booksCollection = collection(db, 'books');
-const usersCollection = collection(db, 'users');
 
-// Helper to convert Firestore Timestamp to string
+// Simulating API delay
+const API_DELAY = 500;
+const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
+
 const convertBookTimestamps = (book: Book): Book => {
     if (book.createdAt instanceof Timestamp) {
         return { ...book, createdAt: book.createdAt.toDate().toISOString() };
+    }
+     if (typeof book.createdAt !== 'string') {
+        // Fallback for any other type
+        return { ...book, createdAt: new Date().toISOString() };
     }
     return book;
 };
@@ -27,120 +32,97 @@ export const getBooks = async ({
   maxPrice?: number;
   userId?: string;
 }): Promise<Book[]> => {
+  await delay(API_DELAY);
   
-  let q = query(booksCollection, orderBy('createdAt', 'desc'));
-  
+  let books = mockBooks;
+
   if (category && category !== 'all') {
-    q = query(q, where('category', '==', category));
+    books = books.filter(book => book.category === category);
   }
   if (city && city !== 'all') {
-    q = query(q, where('city', '==', city));
+    books = books.filter(book => book.city === city);
   }
   if (userId) {
-    q = query(q, where('sellerId', '==', userId));
+    books = books.filter(book => book.sellerId === userId);
   }
-
-  const querySnapshot = await getDocs(q);
-  let booksData = querySnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Book));
-
   if (minPrice !== undefined) {
-    booksData = booksData.filter(book => book.price >= minPrice);
+    books = books.filter(book => book.price >= minPrice);
   }
   if (maxPrice !== undefined) {
-    booksData = booksData.filter(book => book.price <= maxPrice);
+    books = books.filter(book => book.price <= maxPrice);
   }
 
-  return booksData.map(convertBookTimestamps);
+  return books.map(convertBookTimestamps);
 };
 
 export const getBookById = async (id: string): Promise<Book | undefined> => {
-  const bookDocRef = doc(db, 'books', id);
-  const bookSnap = await getDoc(bookDocRef);
-
-  if (!bookSnap.exists()) {
-    return undefined;
+  await delay(API_DELAY);
+  const book = mockBooks.find(b => b.id === id);
+  if (book) {
+     const seller = mockUsers.find(u => u.id === book.sellerId);
+     if(seller) {
+        book.sellerContact = { name: seller.username, phone: '+998 XX XXX XX XX' };
+     }
+     return convertBookTimestamps(book);
   }
-  
-  let bookData = { ...bookSnap.data(), id: bookSnap.id } as Book;
-
-  if (bookData.sellerId) {
-    const sellerDocRef = doc(db, 'users', bookData.sellerId);
-    const sellerSnap = await getDoc(sellerDocRef);
-
-    if (sellerSnap.exists()) {
-       const sellerData = sellerSnap.data() as User;
-       bookData.sellerContact = {
-           name: sellerData.username,
-           phone: '+998 XX XXX XX XX' // Keep phone number private
-       };
-    } else {
-       bookData.sellerContact = {
-           name: 'Noma\'lum',
-           phone: '+998 XX XXX XX XX'
-       };
-    }
-  }
-  
-  return convertBookTimestamps(bookData);
+  return undefined;
 };
 
 export const addBook = async (bookData: Omit<Book, 'id' | 'createdAt' | 'sellerContact'>): Promise<Book> => {
-  
-  const docRef = await addDoc(booksCollection, {
-      ...bookData,
-      createdAt: serverTimestamp(),
-  });
-
-  const newBookSnap = await getDoc(docRef);
-  const newBook = { ...newBookSnap.data(), id: newBookSnap.id } as Book;
-  
+  await delay(API_DELAY);
+  const newBook: Book = {
+    ...bookData,
+    id: `book-${Date.now()}`,
+    createdAt: new Date().toISOString(),
+  };
+  mockBooks.unshift(newBook);
   return convertBookTimestamps(newBook);
 };
 
 export const deleteBook = async (id: string, userId: string): Promise<{ success: boolean }> => {
-  const bookDocRef = doc(db, 'books', id);
-  const bookSnap = await getDoc(bookDocRef);
-
-  if (bookSnap.exists() && bookSnap.data().sellerId === userId) {
-    await deleteDoc(bookDocRef);
+  await delay(API_DELAY);
+  const bookIndex = mockBooks.findIndex(b => b.id === id && b.sellerId === userId);
+  if (bookIndex > -1) {
+    mockBooks.splice(bookIndex, 1);
     return { success: true };
   }
-  
   return { success: false };
 };
 
 export const getCategories = async (): Promise<string[]> => {
-    const querySnapshot = await getDocs(booksCollection);
-    const categories = new Set(querySnapshot.docs.map(doc => doc.data().category as string));
+    await delay(API_DELAY);
+    const categories = new Set(mockBooks.map(doc => doc.category as string));
     return Array.from(categories);
 }
 
 export const getCities = async (): Promise<string[]> => {
-    const querySnapshot = await getDocs(booksCollection);
-    const cities = new Set(querySnapshot.docs.map(doc => doc.data().city as string));
+    await delay(API_DELAY);
+    const cities = new Set(mockBooks.map(doc => doc.city as string));
     return Array.from(cities);
 }
 
 export const getUserById = async (id: string): Promise<User | null> => {
-    const userDocRef = doc(db, 'users', id);
-    const userSnap = await getDoc(userDocRef);
-
-    if (userSnap.exists()) {
-        const userData = userSnap.data();
-        const createdAt = userData.createdAt as Timestamp | null;
-
-        // Get user's posts count
-        const booksQuery = query(booksCollection, where('sellerId', '==', id));
-        const booksSnapshot = await getDocs(booksQuery);
-        const postsCount = booksSnapshot.size;
+    await delay(API_DELAY);
+    const user = mockUsers.find(u => u.id === id);
+    if(user) {
+        const postsCount = mockBooks.filter(b => b.sellerId === id).length;
+        const { passwordHash, ...userWithoutPassword } = user;
+        
+        let createdAtString: string;
+        if (user.createdAt instanceof Timestamp) {
+            createdAtString = user.createdAt.toDate().toISOString();
+        } else if (user.createdAt instanceof Date) {
+            createdAtString = user.createdAt.toISOString();
+        }
+        else {
+            createdAtString = new Date().toISOString();
+        }
 
         return {
-            id: userSnap.id,
-            username: userData.username,
-            email: userData.email,
-            createdAt: createdAt ? createdAt.toDate().toISOString() : new Date().toISOString(),
-            postsCount: postsCount,
-        };
+            ...userWithoutPassword,
+            createdAt: createdAtString,
+            postsCount,
+        }
     }
     return null;
 }

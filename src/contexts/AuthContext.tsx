@@ -4,16 +4,8 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import type { User as AppUser } from '@/lib/types';
 import { useRouter } from 'next/navigation';
-import { auth, db } from '@/lib/firebase';
-import { 
-  onAuthStateChanged, 
-  createUserWithEmailAndPassword, 
-  signInWithEmailAndPassword, 
-  signOut,
-  User as FirebaseUser
-} from 'firebase/auth';
-import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { getUserById } from '@/lib/api';
+import { mockUsers } from '@/lib/mock-data';
 
 
 interface AuthContextType {
@@ -33,26 +25,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        const appUser = await getUserById(firebaseUser.uid);
-        setUser(appUser);
-      } else {
-        setUser(null);
+    // Check local storage for a logged-in user
+    const checkUser = async () => {
+      try {
+        const storedUserId = localStorage.getItem('userId');
+        if (storedUserId) {
+          const appUser = await getUserById(storedUserId);
+          setUser(appUser);
+        }
+      } catch (e) {
+        console.error("Error fetching user from mock API", e);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
+    };
+    checkUser();
   }, []);
 
   const login = async (email: string, pass: string): Promise<boolean> => {
     setLoading(true);
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, pass);
-      const appUser = await getUserById(userCredential.user.uid);
-      setUser(appUser);
-      return true;
+      // Find user in mock data
+      const mockUser = mockUsers.find(u => u.email === email);
+      if (mockUser) { // In a real app, you'd check the password hash
+        const appUser = await getUserById(mockUser.id);
+        setUser(appUser);
+        localStorage.setItem('userId', mockUser.id);
+        return true;
+      }
+      return false;
     } catch (error) {
       console.error("Login error:", error);
       setUser(null);
@@ -65,21 +66,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signup = async (username: string, email: string, pass: string): Promise<{ success: boolean; errorCode?: string }> => {
     setLoading(true);
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
-      const firebaseUser = userCredential.user;
+      // Check if user exists
+      if (mockUsers.some(u => u.email === email)) {
+        return { success: false, errorCode: 'auth/email-already-in-use' };
+      }
       
-      const newUser: Omit<AppUser, 'id' | 'postsCount' | 'createdAt'> = {
+      const newUser: AppUser = {
+        id: `user-${Date.now()}`,
         username,
         email,
+        createdAt: new Date(),
+        postsCount: 0,
       };
 
-      await setDoc(doc(db, "users", firebaseUser.uid), {
-          ...newUser,
-          createdAt: serverTimestamp()
-      });
-      
-      const createdUser = await getUserById(firebaseUser.uid);
-      setUser(createdUser);
+      // Add to mock data (in real app, this would be a DB call)
+      // We don't store passwords in this example.
+      mockUsers.push({ ...newUser, passwordHash: '...' });
+
+      setUser(newUser);
+      localStorage.setItem('userId', newUser.id);
       
       return { success: true };
     } catch (error: any) {
@@ -91,13 +96,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = async () => {
-    try {
-      await signOut(auth);
-      setUser(null);
-      router.push('/login');
-    } catch (error) {
-      console.error("Logout error:", error);
-    }
+    setUser(null);
+    localStorage.removeItem('userId');
+    router.push('/login');
   };
 
   const value = {
