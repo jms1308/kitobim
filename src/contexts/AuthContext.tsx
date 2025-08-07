@@ -7,6 +7,19 @@ import type { User } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 import { getUserProfile, loginUser, createUser } from '@/lib/api';
 
+const avatarStyles = [
+  "adventurer", "adventurer-neutral", "avataaars", "big-ears", 
+  "big-ears-neutral", "big-smile", "bottts", "croodles", "fun-emoji",
+  "icons", "identicon", "initials", "lorelei", "micah", "miniavs",
+  "open-peeps", "personas", "pixel-art", "pixel-art-neutral", "rings"
+];
+
+const getRandomAvatarUrl = (seed: string) => {
+  const style = avatarStyles[Math.floor(Math.random() * avatarStyles.length)];
+  return `https://api.dicebear.com/7.x/${style}/svg?seed=${seed}&radius=50`;
+}
+
+
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
@@ -23,6 +36,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
+  const handleSetUser = (userData: Omit<User, 'avatarUrl'> | null) => {
+    if (userData) {
+      const avatarUrl = getRandomAvatarUrl(userData.id);
+      setUser({ ...userData, avatarUrl });
+    } else {
+      setUser(null);
+    }
+  };
+
   useEffect(() => {
     // Check for user in localStorage on initial load
     const checkUser = async () => {
@@ -31,10 +53,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (storedUserId) {
           const profile = await getUserProfile(storedUserId);
           if (profile) {
-            setUser(profile);
+            handleSetUser(profile);
           } else {
-             // Clear local storage if user not found in DB
              localStorage.removeItem('userId');
+             handleSetUser(null);
           }
         }
       } catch (error) {
@@ -47,16 +69,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
   
   const signup = async (username: string, phone: string, password: string) => {
-    const { success, error } = await createUser(username, phone, password);
-    if (success) {
-      // Automatically log in after successful signup
-      const loggedInUser = await loginUser(phone, password);
-      if(loggedInUser) {
-        setUser(loggedInUser);
-        localStorage.setItem('userId', loggedInUser.id);
-        return { success: true };
-      }
-      return { success: false, error: "Ro'yxatdan o'tdingiz, ammo avtomatik kirishda xatolik." };
+    const { data, success, error } = await createUser(username, phone, password);
+    if (success && data) {
+      handleSetUser(data);
+      localStorage.setItem('userId', data.id);
+      return { success: true };
     }
     return { success: false, error };
   };
@@ -64,7 +81,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (phone: string, password: string) => {
       const loggedInUser = await loginUser(phone, password);
       if (loggedInUser) {
-        setUser(loggedInUser);
+        handleSetUser(loggedInUser);
         localStorage.setItem('userId', loggedInUser.id);
         return { success: true };
       }
@@ -72,7 +89,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = () => {
-    setUser(null);
+    handleSetUser(null);
     localStorage.removeItem('userId');
     router.push('/login');
   };

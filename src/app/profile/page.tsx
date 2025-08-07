@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useAuth } from '@/contexts/AuthContext';
@@ -29,7 +30,7 @@ function ProfilePageContent() {
       <Card className="w-full shadow-2xl">
         <CardHeader className="text-center items-center space-y-4 p-8 bg-muted/30">
           <Avatar className="h-24 w-24 border-4 border-background shadow-lg">
-            <AvatarImage src={`https://api.dicebear.com/7.x/micah/svg?seed=${user.username}`} />
+            <AvatarImage src={user.avatarUrl} />
             <AvatarFallback className="text-3xl">{user.username.charAt(0).toUpperCase()}</AvatarFallback>
           </Avatar>
           <div>

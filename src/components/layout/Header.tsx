@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import Link from 'next/link';
@@ -54,7 +55,7 @@ export default function Header() {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                   <Avatar className="h-9 w-9">
-                    <AvatarImage src={`https://api.dicebear.com/7.x/micah/svg?seed=${user.username}`} alt={user.username} />
+                    <AvatarImage src={user.avatarUrl} alt={user.username} />
                     <AvatarFallback>{user.username.charAt(0).toUpperCase()}</AvatarFallback>
                   </Avatar>
                 </Button>

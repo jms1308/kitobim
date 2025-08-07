@@ -1,4 +1,5 @@
 
+
 export type Condition = 'yangi' | 'yaxshi' | 'yomon';
 
 export interface Book {
@@ -12,7 +13,7 @@ export interface Book {
   city: string;
   imageUrl: string;
   createdAt: string;
-  sellerId: string; // This will now be the user's ID from our custom table
+  sellerId: string; 
   sellerContact?: {
     name: string;
     phone: string;
@@ -25,4 +26,5 @@ export interface User {
   phone: string;
   createdAt: string;
   postsCount: number;
+  avatarUrl?: string;
 }
