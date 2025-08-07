@@ -152,10 +152,35 @@ export const getBookById = async (id: string): Promise<Book | null> => {
     } as Book;
 };
 
-export const addBook = async (bookData: Omit<Book, 'id' | 'createdAt' | 'sellerContact'>): Promise<Book | null> => {
+export const addBook = async (bookData: Omit<Book, 'id' | 'createdAt'>): Promise<Book | null> => {
+    const { sellerId, title, author, description, price, condition, category, city, imageUrl } = bookData;
+
+    const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('username, phone')
+        .eq('id', sellerId)
+        .single();
+
+    if (userError || !userData) {
+        console.error('Error fetching seller for contact info:', userError);
+        return null;
+    }
+
+    const bookToInsert = {
+        title,
+        author,
+        description,
+        price,
+        condition,
+        category,
+        city,
+        imageUrl,
+        sellerId
+    };
+
     const { data, error } = await supabase
         .from('books')
-        .insert({ ...bookData })
+        .insert(bookToInsert)
         .select()
         .single();
     
@@ -164,7 +189,13 @@ export const addBook = async (bookData: Omit<Book, 'id' | 'createdAt' | 'sellerC
         return null;
     }
     
-    return data as Book;
+    return {
+        ...data,
+        sellerContact: {
+            name: userData.username,
+            phone: userData.phone
+        }
+    } as Book;
 };
 
 export const deleteBook = async (id: string, userId: string): Promise<{ success: boolean }> => {
