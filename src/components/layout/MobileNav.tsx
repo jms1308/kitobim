@@ -29,11 +29,10 @@ export default function MobileNav() {
   }
   
   const visibleLinks = getVisibleLinks();
-  const gridColsClass = `grid-cols-${visibleLinks.length}`;
 
   return (
     <div className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-background border-t z-50">
-      <nav className={cn("grid h-full", gridColsClass)}>
+      <nav className="flex h-full items-center justify-around">
         {visibleLinks.map((link) => {
           const isActive = pathname === link.href;
           return (
@@ -41,7 +40,7 @@ export default function MobileNav() {
               key={link.href}
               href={link.href}
               className={cn(
-                "flex flex-col items-center justify-center gap-1 text-xs font-medium transition-colors",
+                "flex flex-col items-center justify-center gap-1 text-xs font-medium transition-colors w-16",
                 isActive ? "text-primary" : "text-muted-foreground hover:text-primary"
               )}
             >
