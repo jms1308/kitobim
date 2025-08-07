@@ -29,7 +29,7 @@ export default function MobileNav() {
               key={link.href}
               href={link.href}
               className={cn(
-                "flex flex-1 flex-col items-center justify-center gap-1 text-xs font-medium transition-all duration-200 ease-in-out text-center whitespace-nowrap rounded-lg py-1.5",
+                "flex flex-1 flex-col items-center justify-center gap-1 text-xs font-medium transition-all duration-300 ease-out text-center whitespace-nowrap rounded-lg py-1.5",
                 isActive 
                   ? "text-primary bg-primary/10 scale-105" 
                   : "text-muted-foreground hover:text-primary"
