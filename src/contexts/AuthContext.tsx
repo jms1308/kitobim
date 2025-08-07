@@ -2,7 +2,7 @@
 "use client";
 
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import type { AppUser } from '@/lib/types';
+import type { User as AppUser } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 import { auth, db } from '@/lib/firebase';
 import { 
@@ -34,6 +34,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      setLoading(true);
       if (firebaseUser) {
         try {
             const appUser = await getUserById(firebaseUser.uid);
@@ -54,15 +55,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (email: string, pass: string): Promise<boolean> => {
     setLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, email, pass);
-      // onAuthStateChanged will handle setting the user and loading state
+      const userCredential = await signInWithEmailAndPassword(auth, email, pass);
+      const appUser = await getUserById(userCredential.user.uid);
+      setUser(appUser);
       return true;
     } catch (error) {
       console.error("Login error:", error);
       setUser(null);
       return false;
     } finally {
-        // Even if onAuthStateChanged is slow, this ensures loading stops
         setLoading(false);
     }
   };
@@ -73,7 +74,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
       const firebaseUser = userCredential.user;
       
-      const newUser: Omit<AppUser, 'id'> = {
+      const newUser: Omit<AppUser, 'id' | 'postsCount'> = {
         username,
         email,
         createdAt: new Date().toISOString()
@@ -84,11 +85,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           createdAt: serverTimestamp()
       });
       
-      // Manually set the new user in the context
       const createdUser = await getUserById(firebaseUser.uid);
-      if (createdUser) {
-        setUser(createdUser);
-      }
+      setUser(createdUser);
       
       return { success: true };
     } catch (error: any) {

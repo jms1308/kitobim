@@ -1,33 +1,24 @@
 "use client";
 
-import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import AuthGuard from '@/components/AuthGuard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { getBooks } from '@/lib/api';
-import type { Book } from '@/lib/types';
-import { Loader2, Mail, User as UserIcon, Calendar, Book as BookIcon } from 'lucide-react';
+import { Loader2, Mail, Calendar, Book as BookIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { Timestamp } from 'firebase/firestore';
 
 function ProfilePageContent() {
-  const { user, logout } = useAuth();
-  const [userBooks, setUserBooks] = useState<Book[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { user, logout, loading } = useAuth();
 
-  useEffect(() => {
-    const fetchUserBooks = async () => {
-      if (user) {
-        setLoading(true);
-        const books = await getBooks({ userId: user.id });
-        setUserBooks(books);
-        setLoading(false);
-      }
-    };
-    fetchUserBooks();
-  }, [user]);
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center pt-16">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   if (!user) {
     return null; // AuthGuard handles redirection
@@ -68,11 +59,7 @@ function ProfilePageContent() {
                 <BookIcon className="h-8 w-8 text-primary"/>
                 <div>
                     <p className="text-sm text-muted-foreground">Joylashtirilgan e'lonlar soni</p>
-                    {loading ? (
-                        <Loader2 className="h-5 w-5 animate-spin" />
-                    ) : (
-                        <p className="font-semibold">{userBooks.length} ta kitob</p>
-                    )}
+                    <p className="font-semibold">{user.postsCount} ta kitob</p>
                 </div>
             </div>
           </div>

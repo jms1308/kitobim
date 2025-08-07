@@ -1,14 +1,9 @@
 import { db, auth } from './firebase';
-import { collection, getDocs, doc, getDoc, addDoc, deleteDoc, query, where, orderBy, serverTimestamp, Timestamp } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc, addDoc, deleteDoc, query, where, orderBy, serverTimestamp, Timestamp, collectionGroup } from 'firebase/firestore';
 import type { Book, User } from './types';
-
-const API_DELAY = 0; // No more mock delay needed
 
 const booksCollection = collection(db, 'books');
 const usersCollection = collection(db, 'users');
-
-// Simulate network delay
-const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
 // Helper to convert Firestore Timestamp to string
 const convertBookTimestamps = (book: Book): Book => {
@@ -32,7 +27,6 @@ export const getBooks = async ({
   maxPrice?: number;
   userId?: string;
 }): Promise<Book[]> => {
-  await delay(API_DELAY);
   
   let q = query(booksCollection, orderBy('createdAt', 'desc'));
   
@@ -60,7 +54,6 @@ export const getBooks = async ({
 };
 
 export const getBookById = async (id: string): Promise<Book | undefined> => {
-  await delay(API_DELAY);
   const bookDocRef = doc(db, 'books', id);
   const bookSnap = await getDoc(bookDocRef);
 
@@ -92,7 +85,6 @@ export const getBookById = async (id: string): Promise<Book | undefined> => {
 };
 
 export const addBook = async (bookData: Omit<Book, 'id' | 'createdAt' | 'sellerContact'>): Promise<Book> => {
-  await delay(API_DELAY);
   
   const docRef = await addDoc(booksCollection, {
       ...bookData,
@@ -106,7 +98,6 @@ export const addBook = async (bookData: Omit<Book, 'id' | 'createdAt' | 'sellerC
 };
 
 export const deleteBook = async (id: string, userId: string): Promise<{ success: boolean }> => {
-  await delay(API_DELAY);
   const bookDocRef = doc(db, 'books', id);
   const bookSnap = await getDoc(bookDocRef);
 
@@ -119,14 +110,12 @@ export const deleteBook = async (id: string, userId: string): Promise<{ success:
 };
 
 export const getCategories = async (): Promise<string[]> => {
-    await delay(API_DELAY);
     const querySnapshot = await getDocs(booksCollection);
     const categories = new Set(querySnapshot.docs.map(doc => doc.data().category as string));
     return Array.from(categories);
 }
 
 export const getCities = async (): Promise<string[]> => {
-    await delay(API_DELAY);
     const querySnapshot = await getDocs(booksCollection);
     const cities = new Set(querySnapshot.docs.map(doc => doc.data().city as string));
     return Array.from(cities);
@@ -135,14 +124,22 @@ export const getCities = async (): Promise<string[]> => {
 export const getUserById = async (id: string): Promise<User | null> => {
     const userDocRef = doc(db, 'users', id);
     const userSnap = await getDoc(userDocRef);
+
     if (userSnap.exists()) {
         const userData = userSnap.data();
         const createdAt = userData.createdAt as Timestamp | null;
+
+        // Get user's posts count
+        const booksQuery = query(booksCollection, where('sellerId', '==', id));
+        const booksSnapshot = await getDocs(booksQuery);
+        const postsCount = booksSnapshot.size;
+
         return {
             id: userSnap.id,
             username: userData.username,
             email: userData.email,
-            createdAt: createdAt ? createdAt.toDate().toISOString() : new Date().toISOString()
+            createdAt: createdAt ? createdAt.toDate().toISOString() : new Date().toISOString(),
+            postsCount: postsCount,
         };
     }
     return null;

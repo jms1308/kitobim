@@ -25,4 +25,5 @@ export interface User {
   username: string;
   email: string;
   createdAt: string | Timestamp;
+  postsCount: number;
 }
