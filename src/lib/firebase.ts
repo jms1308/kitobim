@@ -1,7 +1,7 @@
 // Import the functions you need from the SDKs you need
-import { initializeApp, getApps, getApp } from "firebase/app";
-import { getFirestore, enableIndexedDbPersistence } from "firebase/firestore";
-import { getAuth } from "firebase/auth";
+import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app";
+import { getFirestore, enableIndexedDbPersistence, Firestore } from "firebase/firestore";
+import { getAuth, Auth } from "firebase/auth";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -14,25 +14,43 @@ const firebaseConfig = {
   "messagingSenderId": "943356218150"
 };
 
-// Initialize Firebase
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-const db = getFirestore(app);
-const auth = getAuth(app);
+let app: FirebaseApp;
+let auth: Auth;
+let db: Firestore;
+let persistenceEnabled = false;
 
-// Enable offline persistence. This should be done only once.
 if (typeof window !== 'undefined') {
-  try {
-    enableIndexedDbPersistence(db)
-      .catch((err) => {
-        if (err.code == 'failed-precondition') {
-          console.warn("Firebase persistence failed: multiple tabs open.");
-        } else if (err.code == 'unimplemented') {
-          console.warn("Firebase persistence not available in this browser.");
+    // Initialize Firebase
+    app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+    auth = getAuth(app);
+    db = getFirestore(app);
+
+    // Enable offline persistence only once
+    if (!persistenceEnabled) {
+        try {
+            enableIndexedDbPersistence(db)
+                .then(() => {
+                    persistenceEnabled = true;
+                    console.log("Firebase persistence enabled.");
+                })
+                .catch((err) => {
+                    if (err.code == 'failed-precondition') {
+                        console.warn("Firebase persistence failed: multiple tabs open. Persistence might not work.");
+                        persistenceEnabled = true; // Still mark as "attempted" to avoid retries
+                    } else if (err.code == 'unimplemented') {
+                        console.warn("Firebase persistence not available in this browser.");
+                    }
+                });
+        } catch (error) {
+            console.error("Error enabling offline persistence: ", error);
         }
-      });
-  } catch (error) {
-      console.error("Error enabling offline persistence: ", error);
-  }
+    }
+} else {
+    // Server-side rendering or build environment
+    app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+    auth = getAuth(app);
+    db = getFirestore(app);
 }
+
 
 export { db, auth };
