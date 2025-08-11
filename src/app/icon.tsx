@@ -1,5 +1,5 @@
 import { ImageResponse } from 'next/og'
-import { Book } from 'lucide-react'
+import { Store } from 'lucide-react'
 
 // Route segment config
 export const runtime = 'edge'
@@ -24,10 +24,10 @@ export default function Icon() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          color: '#111827',
+          color: '#2563EB', // A nice blue color
         }}
       >
-        <Book size={22} />
+        <Store size={24} />
       </div>
     ),
     {
