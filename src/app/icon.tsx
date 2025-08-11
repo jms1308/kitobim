@@ -18,17 +18,16 @@ export default function Icon() {
       <div
         style={{
           fontSize: 24,
-          background: 'hsl(210 60% 50%)',
+          background: '#FFFFFF',
           width: '100%',
           height: '100%',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          color: 'white',
-          borderRadius: '6px'
+          color: '#111827',
         }}
       >
-        <Book size={20} />
+        <Book size={22} />
       </div>
     ),
     {
