@@ -58,6 +58,7 @@ function EditPostPageContent({ params }: { params: { id: string } }) {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isFetchingBook, setIsFetchingBook] = useState(true);
+  const id = params.id;
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -73,7 +74,6 @@ function EditPostPageContent({ params }: { params: { id: string } }) {
   });
   
   useEffect(() => {
-    const id = params.id;
     const fetchBook = async () => {
       if (!id) return;
       setIsFetchingBook(true);
@@ -87,6 +87,7 @@ function EditPostPageContent({ params }: { params: { id: string } }) {
             }
             form.reset({
                 ...bookData,
+                price: bookData.price,
                 image: undefined,
             });
             setImagePreview(bookData.imageUrl);
@@ -102,7 +103,7 @@ function EditPostPageContent({ params }: { params: { id: string } }) {
       }
     }
     fetchBook();
-  }, [params, form, toast, router, user]);
+  }, [id, form, toast, router, user]);
 
 
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -139,7 +140,7 @@ function EditPostPageContent({ params }: { params: { id: string } }) {
           imageUrl: imageUrl as string,
         };
 
-        const updatedBook = await updateBook(params.id, bookUpdateData);
+        const updatedBook = await updateBook(id, bookUpdateData);
 
         if (updatedBook) {
             toast({
@@ -238,14 +239,14 @@ function EditPostPageContent({ params }: { params: { id: string } }) {
                <FormField
                 control={form.control}
                 name="price"
-                render={({ field: { onChange, ...restField } }) => (
+                render={({ field }) => (
                   <FormItem>
                     <FormLabel>Narx (so'mda)</FormLabel>
                     <FormControl>
                         <Input 
                             type="number" 
-                            onChange={(e) => onChange(parseInt(e.target.value, 10) || 0)} 
-                            {...restField}
+                            {...field}
+                            onChange={(e) => field.onChange(parseInt(e.target.value, 10) || 0)}
                         />
                     </FormControl>
                     <FormMessage />
@@ -354,3 +355,5 @@ export default function EditPostPage({ params }: { params: { id: string } }) {
         </AuthGuard>
     )
 }
+
+    
