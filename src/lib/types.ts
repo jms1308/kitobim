@@ -20,6 +20,17 @@ export interface Book {
   };
 }
 
+export type UpdateBookData = {
+  title: string;
+  author: string;
+  description: string;
+  price: number;
+  condition: Condition;
+  category: string;
+  city: string;
+  imageUrl: string;
+};
+
 export interface User {
   id: string;
   username: string;

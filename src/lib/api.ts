@@ -2,7 +2,7 @@
 
 "use client";
 
-import type { Book, User } from './types';
+import type { Book, UpdateBookData, User } from './types';
 import { supabase } from './supabaseClient';
 
 
@@ -239,6 +239,39 @@ export const addBook = async (bookData: Omit<Book, 'id' | 'createdAt' | 'sellerC
         sellerContact: {
             name: userData.username,
             phone: userData.phone
+        }
+    } as Book;
+};
+
+
+export const updateBook = async (id: string, bookData: UpdateBookData): Promise<Book | null> => {
+    const { error } = await supabase
+        .from('books')
+        .update(bookData)
+        .eq('id', id);
+
+    if (error) {
+        console.error("Error updating book:", error);
+        return null;
+    }
+
+    // Return the updated book data
+    const { data: updatedBookData, error: fetchError } = await supabase
+        .from('books')
+        .select(`*, seller:users!left(id, username, phone)`)
+        .eq('id', id)
+        .single();
+    
+    if (fetchError || !updatedBookData) {
+        console.error("Error fetching updated book:", fetchError);
+        return null;
+    }
+    
+     return {
+        ...updatedBookData,
+        sellerContact: {
+            name: (updatedBookData.seller as any)?.username || 'Noma\'lum',
+            phone: (updatedBookData.seller as any)?.phone || 'Noma\'lum'
         }
     } as Book;
 };

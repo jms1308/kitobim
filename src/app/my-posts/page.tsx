@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState } from 'react';
@@ -7,7 +8,7 @@ import type { Book } from '@/lib/types';
 import BookCard from '@/components/BookCard';
 import AuthGuard from '@/components/AuthGuard';
 import { Button } from '@/components/ui/button';
-import { Trash2 } from 'lucide-react';
+import { Trash2, FilePenLine } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -85,27 +86,34 @@ function MyPostsPageContent() {
           {userBooks.map((book) => (
             <div key={book.id} className="relative group">
               <BookCard book={book} />
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                    <Button variant="destructive" size="icon" className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Trash2 className="h-4 w-4" />
-                    </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                    <AlertDialogTitle>Ishonchingiz komilmi?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                        Bu amalni qaytarib bo'lmaydi. Bu sizning e'loningizni serverlarimizdan butunlay o'chirib tashlaydi.
-                    </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                    <AlertDialogCancel>Bekor qilish</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => handleDelete(book.id)}>
-                        O'chirish
-                    </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+              <div className="absolute top-2 right-2 z-10 flex gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                <Button asChild variant="secondary" size="icon" className="h-8 w-8">
+                  <Link href={`/edit-post/${book.id}`}>
+                    <FilePenLine className="h-4 w-4" />
+                  </Link>
+                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                      <Button variant="destructive" size="icon" className="h-8 w-8">
+                          <Trash2 className="h-4 w-4" />
+                      </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                      <AlertDialogHeader>
+                      <AlertDialogTitle>Ishonchingiz komilmi?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                          Bu amalni qaytarib bo'lmaydi. Bu sizning e'loningizni serverlarimizdan butunlay o'chirib tashlaydi.
+                      </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                      <AlertDialogCancel>Bekor qilish</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => handleDelete(book.id)}>
+                          O'chirish
+                      </AlertDialogAction>
+                      </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
             </div>
           ))}
         </div>
