@@ -12,6 +12,9 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 export const metadata: Metadata = {
   title: 'Kitobim 2.0',
   description: 'O‘zbekistondagi 2-qo‘l kitoblar uchun eʼlonlar sayti',
+  icons: {
+    icon: '/icon.png',
+  },
 };
 
 export default function RootLayout({
