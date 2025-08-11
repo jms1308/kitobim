@@ -26,7 +26,7 @@ import { useState, useRef } from 'react';
 import { Loader2, Upload, CheckCircle2, AlertCircle, Camera } from 'lucide-react';
 import Image from 'next/image';
 
-const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 
 
@@ -40,7 +40,7 @@ const formSchema = z.object({
   description: z.string().min(20, { message: "Tavsif kamida 20 belgidan iborat bo'lishi kerak." }),
   image: z
     .instanceof(File, { message: "Iltimos, rasm faylini tanlang." })
-    .refine((file) => file.size <= MAX_FILE_SIZE, `Rasm hajmi 2MB dan oshmasligi kerak.`)
+    .refine((file) => file.size <= MAX_FILE_SIZE, `Rasm hajmi 10MB dan oshmasligi kerak.`)
     .refine(
       (file) => ACCEPTED_IMAGE_TYPES.includes(file.type),
       "Faqat .jpg, .jpeg, .png va .webp formatidagi rasmlar qabul qilinadi."
